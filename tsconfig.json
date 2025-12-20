@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "jsx": "react-native",
+    "target": "esnext",
+    "module": "esnext",
+    "lib": [
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "extends": "expo/tsconfig.base"
+}
