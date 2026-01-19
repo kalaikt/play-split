@@ -56,7 +56,6 @@ export const initDatabase = async () => {
     `);
   } catch (error) {
     // Column doesn't exist, drop and recreate table
-    console.log('Migrating expenses table...');
     await db.execAsync('DROP TABLE IF EXISTS expenses;');
     await db.execAsync(`
       CREATE TABLE expenses (
@@ -80,6 +79,29 @@ export const initDatabase = async () => {
       settledAt TEXT NOT NULL
     );
   `);
+
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS shuffle_states (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      groupId INTEGER NOT NULL UNIQUE,
+      numberOfCourts INTEGER NOT NULL,
+      shuffleResult TEXT NOT NULL,
+      rotationOrder TEXT NOT NULL,
+      rotationIndex INTEGER NOT NULL,
+      isEnded INTEGER DEFAULT 0,
+      updatedAt TEXT NOT NULL,
+      FOREIGN KEY (groupId) REFERENCES groups (id) ON DELETE CASCADE
+    );
+  `);
+
+  // Migration: Add isEnded column if it doesn't exist
+  try {
+    await db.execAsync(`
+      ALTER TABLE shuffle_states ADD COLUMN isEnded INTEGER DEFAULT 0;
+    `);
+  } catch (error: any) {
+    // Column likely already exists, ignore the error
+  }
 
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS players (
@@ -120,6 +142,11 @@ export const getGroups = async (): Promise<Group[]> => {
 export const deleteGroup = async (id: number): Promise<void> => {
   const database = getDB();
   await database.runAsync('DELETE FROM groups WHERE id = ?', [id]);
+};
+
+export const updateGroup = async (id: number, name: string, createdAt: string): Promise<void> => {
+  const database = getDB();
+  await database.runAsync('UPDATE groups SET name = ?, createdAt = ? WHERE id = ?', [name, createdAt, id]);
 };
 
 export const updateGroupExpense = async (id: number, expense: number): Promise<void> => {
@@ -173,6 +200,45 @@ export const getAllSettlements = async (): Promise<any[]> => {
   const database = getDB();
   const result = await database.getAllAsync('SELECT * FROM settlements ORDER BY settledAt DESC');
   return result;
+};
+
+// Shuffle state operations
+export const saveShuffleState = async (
+  groupId: number,
+  numberOfCourts: number,
+  shuffleResult: any,
+  rotationOrder: Player[],
+  rotationIndex: number,
+  isEnded: boolean = false
+): Promise<void> => {
+  const database = getDB();
+  await database.runAsync(
+    `INSERT OR REPLACE INTO shuffle_states (groupId, numberOfCourts, shuffleResult, rotationOrder, rotationIndex, isEnded, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [groupId, numberOfCourts, JSON.stringify(shuffleResult), JSON.stringify(rotationOrder), rotationIndex, isEnded ? 1 : 0, new Date().toISOString()]
+  );
+};
+
+export const getShuffleState = async (groupId: number): Promise<any | null> => {
+  const database = getDB();
+  const result = await database.getFirstAsync<any>(
+    'SELECT * FROM shuffle_states WHERE groupId = ?',
+    [groupId]
+  );
+  if (result) {
+    return {
+      ...result,
+      shuffleResult: JSON.parse(result.shuffleResult),
+      rotationOrder: JSON.parse(result.rotationOrder),
+      isEnded: result.isEnded === 1
+    };
+  }
+  return null;
+};
+
+export const deleteShuffleState = async (groupId: number): Promise<void> => {
+  const database = getDB();
+  await database.runAsync('DELETE FROM shuffle_states WHERE groupId = ?', [groupId]);
 };
 
 export const deleteSettlement = async (id: number): Promise<void> => {

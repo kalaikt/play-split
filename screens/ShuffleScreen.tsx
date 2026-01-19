@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { TextInput, Button, Text, Divider, Menu, IconButton } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native';
 import { Player, Group } from '../types';
 import { shufflePlayers } from '../utils/shuffleAlgorithm';
 import CourtVisualization from '../components/CourtVisualization';
+import { saveShuffleState, deleteShuffleState, getShuffleState } from '../database/db';
 
 interface ShuffleScreenProps {
   route: any;
@@ -11,14 +13,51 @@ interface ShuffleScreenProps {
 }
 
 const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
-  const { group, players }: { group: Group; players: Player[] } = route.params;
-  const [numberOfCourts, setNumberOfCourts] = useState(1);
-  const [shuffleResult, setShuffleResult] = useState<any>(null);
-  const [rotationOrder, setRotationOrder] = useState<Player[]>([]);
-  const [rotationIndex, setRotationIndex] = useState(0);
+  const { group, players, shuffleState }: { group: Group; players: Player[]; shuffleState?: any } = route.params;
+  
+  const [numberOfCourts, setNumberOfCourts] = useState(shuffleState?.numberOfCourts || 1);
+  const [shuffleResult, setShuffleResult] = useState<any>(shuffleState?.shuffleResult || null);
+  const [rotationOrder, setRotationOrder] = useState<Player[]>(shuffleState?.rotationOrder || []);
+  const [rotationIndex, setRotationIndex] = useState(shuffleState?.rotationIndex || 0);
+  const [isEnded, setIsEnded] = useState(shuffleState?.isEnded === true || shuffleState?.isEnded === 1);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleShuffle = () => {
+  // Load initial state on mount
+  useEffect(() => {
+    const loadInitialState = async () => {
+      setIsLoading(true);
+      const currentState = await getShuffleState(group.id);
+      if (currentState) {
+        setIsEnded(currentState.isEnded === true || currentState.isEnded === 1);
+        setNumberOfCourts(currentState.numberOfCourts);
+        setShuffleResult(currentState.shuffleResult);
+        setRotationOrder(currentState.rotationOrder);
+        setRotationIndex(currentState.rotationIndex);
+      }
+      setIsLoading(false);
+    };
+    loadInitialState();
+  }, [group.id]);
+
+  // Reload shuffle state when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadShuffleState = async () => {
+        const currentState = await getShuffleState(group.id);
+        if (currentState) {
+          setIsEnded(currentState.isEnded === true || currentState.isEnded === 1);
+          setNumberOfCourts(currentState.numberOfCourts);
+          setShuffleResult(currentState.shuffleResult);
+          setRotationOrder(currentState.rotationOrder);
+          setRotationIndex(currentState.rotationIndex);
+        }
+      };
+      loadShuffleState();
+    }, [group.id])
+  );
+
+  const handleShuffle = async () => {
     const courts = numberOfCourts;
     
     // Use rotation order for systematic, equal rotation
@@ -31,7 +70,49 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
     
     setShuffleResult(result);
     setRotationOrder(result.rotationOrder);
-    setRotationIndex(result.nextRotationIndex);
+    setRotationIndex(result.nextRotationIndex);    
+    // Save shuffle state to database (preserve isEnded state)
+    await saveShuffleState(
+      group.id,
+      courts,
+      result,
+      result.rotationOrder,
+      result.nextRotationIndex,
+      isEnded
+    );
+  };
+
+  const handleEndShuffle = async () => {
+    setIsEnded(true);
+    await saveShuffleState(
+      group.id,
+      numberOfCourts,
+      shuffleResult,
+      rotationOrder,
+      rotationIndex,
+      true // isEnded = true
+    );
+  };
+
+  const handleReplay = async () => {
+    setIsEnded(false);
+    await saveShuffleState(
+      group.id,
+      numberOfCourts,
+      shuffleResult,
+      rotationOrder,
+      rotationIndex,
+      false // isEnded = false
+    );
+  };
+
+  const handleClearShuffle = async () => {
+    await deleteShuffleState(group.id);
+    setShuffleResult(null);
+    setRotationOrder([]);
+    setRotationIndex(0);
+    setNumberOfCourts(1);
+    setIsEnded(false);
   };
 
   const maxCourts = Math.floor(players.length / 4);
@@ -97,16 +178,53 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
             </Text>
           )}
 
+          {isEnded && (
+            <Text style={styles.endedHint}>
+              ⛔ Shuffle session ended. Click "Replay" to continue or "Clear Shuffle" to start fresh.
+            </Text>
+          )}
+
           <Button
             mode="contained"
             onPress={handleShuffle}
             style={styles.button}
-            disabled={players.length < 4}
+            disabled={players.length < 4 || isEnded}
             buttonColor="#1976d2"
             theme={{ roundness: 1 }}
           >
             {rotationOrder.length > 0 ? 'Next Round (Rotate Players)' : 'Start First Round'}
           </Button>
+          
+          {shuffleResult && (
+            <View style={styles.buttonRow}>
+              <Button
+                mode="outlined"
+                onPress={() => {
+                  console.log('Button clicked - isEnded:', isEnded);
+                  if (isEnded) {
+                    handleReplay();
+                  } else {
+                    handleEndShuffle();
+                  }
+                }}
+                style={styles.halfButton}
+                buttonColor={isEnded ? "#ff9800" : "#4caf50"}
+                textColor="#fff"
+                theme={{ roundness: 1 }}
+              >
+                {isEnded ? 'Replay' : 'End'}
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={handleClearShuffle}
+                style={styles.halfButton}
+                textColor="#f44336"
+                theme={{ roundness: 1 }}
+              >
+                Clear Shuffle
+              </Button>
+            </View>
+          )}
         </View>
 
       {shuffleResult && (
@@ -202,8 +320,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontWeight: '500',
   },
+  endedHint: {
+    fontSize: 13,
+    color: '#f44336',
+    marginBottom: 12,
+    fontWeight: '600',
+    backgroundColor: '#ffebee',
+    padding: 10,
+    borderRadius: 4,
+  },
   button: {
     marginTop: 8,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  halfButton: {
+    flex: 1,
   },
   divider: {
     marginVertical: 16,

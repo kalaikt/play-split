@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, ScrollView } from 'react-native';
 import { Button, FAB, List, Dialog, Portal, TextInput, Text, Menu, IconButton } from 'react-native-paper';
-import { createMasterPlayer, getAllMasterPlayers, updateMasterPlayer, deleteMasterPlayer } from '../database/db';
-import { Player, GradeLevel } from '../types';
+import { createMasterPlayer, getAllMasterPlayers, updateMasterPlayer, deleteMasterPlayer, getAllSettlements } from '../database/db';
+import { Player, GradeLevel, Settlement } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface MasterPlayersScreenProps {
   navigation: any;
@@ -16,14 +17,18 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
   const [playerName, setPlayerName] = useState('');
   const [gradeLevel, setGradeLevel] = useState<GradeLevel>('Beginner');
   const [menuVisible, setMenuVisible] = useState(false);
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const { currency } = useCurrency();
 
   useEffect(() => {
     loadPlayers();
+    loadSettlements();
   }, []);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       loadPlayers();
+      loadSettlements();
     });
     return unsubscribe;
   }, [navigation]);
@@ -31,6 +36,11 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
   const loadPlayers = async () => {
     const fetchedPlayers = await getAllMasterPlayers();
     setPlayers(fetchedPlayers);
+  };
+
+  const loadSettlements = async () => {
+    const allSettlements = await getAllSettlements();
+    setSettlements(allSettlements);
   };
 
   const handleSavePlayer = async () => {
@@ -94,12 +104,10 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
           </View>
         </View>
       </View>
-      <View style={styles.content}>
-        <FlatList
-          data={players}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
+      <ScrollView style={styles.content}>
+        {players.map((item) => (
           <List.Item
+            key={item.id}
             title={item.name}
             description={item.gradeLevel}
             left={props => (
@@ -127,13 +135,33 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
             )}
             style={styles.listItem}
           />
-        )}
-        ListEmptyComponent={
+        ))}
+        {players.length === 0 && (
           <View style={styles.emptyContainer}>
             <Text>No master players yet. Add your first player!</Text>
           </View>
-        }
-      />
+        )}
+        {settlements.length > 0 && (
+          <View style={styles.settlementHistorySection}>
+            <Text style={styles.settlementHistoryTitle}>Settlement History</Text>
+            {settlements.map((settlement) => (
+              <View key={settlement.id} style={styles.settlementHistoryItem}>
+                <View style={styles.settlementHistoryDetails}>
+                  <Text style={styles.settlementHistoryText}>
+                    <Text style={styles.settlementHistoryFrom}>{settlement.fromPlayer}</Text>
+                    <Text style={styles.settlementHistoryArrow}> → </Text>
+                    <Text style={styles.settlementHistoryTo}>{settlement.toPlayer}</Text>
+                  </Text>
+                  <Text style={styles.settlementHistoryAmount}>{currency}{settlement.amount.toFixed(2)}</Text>
+                </View>
+                <Text style={styles.settlementHistoryDate}>
+                  {new Date(settlement.settledAt).toLocaleDateString()} {new Date(settlement.settledAt).toLocaleTimeString()}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
 
       <FAB
         icon="plus"
@@ -143,7 +171,6 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
         customSize={56}
         backgroundColor="#1976d2"
       />
-      </View>
 
       <Portal>
         <Dialog visible={dialogVisible} onDismiss={resetForm}>
@@ -251,6 +278,58 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 12,
+  },
+  settlementHistorySection: {
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  settlementHistoryTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+    marginTop: 12,
+  },
+  settlementHistoryItem: {
+    padding: 12,
+    marginBottom: 8,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4caf50',
+  },
+  settlementHistoryDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  settlementHistoryText: {
+    fontSize: 14,
+    flex: 1,
+  },
+  settlementHistoryFrom: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  settlementHistoryArrow: {
+    color: '#666',
+  },
+  settlementHistoryTo: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  settlementHistoryAmount: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#4caf50',
+  },
+  settlementHistoryDate: {
+    fontSize: 11,
+    color: '#666',
   },
 });
 

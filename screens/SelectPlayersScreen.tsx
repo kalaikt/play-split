@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, ScrollView } from 'react-native';
 import { Button, List, Text, Checkbox, IconButton, Dialog, Portal, TextInput, Menu } from 'react-native-paper';
-import { getAllMasterPlayers, addPlayerToGroup, removePlayerFromGroup, getSelectedPlayersForGroup, createExpense, getExpensesByGroup, updateExpense, deleteExpense, getAllSettlements } from '../database/db';
-import { Player, Group, GradeLevel, Expense, Settlement } from '../types';
+import { getAllMasterPlayers, addPlayerToGroup, removePlayerFromGroup, getSelectedPlayersForGroup, createExpense, getExpensesByGroup, updateExpense, deleteExpense } from '../database/db';
+import { Player, Group, GradeLevel, Expense } from '../types';
 import { useCurrency } from '../context/CurrencyContext';
 
 interface SelectPlayersScreenProps {
@@ -15,7 +15,6 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [expenseDialogVisible, setExpenseDialogVisible] = useState(false);
   const [expenseListVisible, setExpenseListVisible] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -31,7 +30,6 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
   useEffect(() => {
     loadPlayers();
     loadExpenses();
-    loadSettlements();
   }, []);
 
   const loadPlayers = async () => {
@@ -45,11 +43,6 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
   const loadExpenses = async () => {
     const groupExpenses = await getExpensesByGroup(group.id);
     setExpenses(groupExpenses);
-  };
-
-  const loadSettlements = async () => {
-    const allSettlements = await getAllSettlements();
-    setSettlements(allSettlements);
   };
 
   const openAddExpenseDialog = () => {
@@ -306,27 +299,6 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
           </View>
         )}
 
-        {/* Settlement History Section */}
-        {settlements.length > 0 && (
-          <View style={styles.settlementHistorySection}>
-            <Text style={styles.settlementHistoryTitle}>Settlement History</Text>
-            {settlements.map((settlement) => (
-              <View key={settlement.id} style={styles.settlementHistoryItem}>
-                <View style={styles.settlementHistoryDetails}>
-                  <Text style={styles.settlementHistoryText}>
-                    <Text style={styles.settlementHistoryFrom}>{settlement.fromPlayer}</Text>
-                    <Text style={styles.settlementHistoryArrow}> → </Text>
-                    <Text style={styles.settlementHistoryTo}>{settlement.toPlayer}</Text>
-                  </Text>
-                  <Text style={styles.settlementHistoryAmount}>{currency}{settlement.amount.toFixed(2)}</Text>
-                </View>
-                <Text style={styles.settlementHistoryDate}>
-                  {new Date(settlement.settledAt).toLocaleDateString()} {new Date(settlement.settledAt).toLocaleTimeString()}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
       </ScrollView>
 
       <Portal>
@@ -546,55 +518,6 @@ const styles = StyleSheet.create({
   noExpensesText: {
     color: '#999',
     marginBottom: 12,
-  },
-  settlementHistorySection: {
-    marginTop: 20,
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-  },
-  settlementHistoryTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  settlementHistoryItem: {
-    padding: 12,
-    marginBottom: 8,
-    backgroundColor: '#e8f5e9',
-    borderRadius: 4,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4caf50',
-  },
-  settlementHistoryDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  settlementHistoryText: {
-    fontSize: 14,
-    flex: 1,
-  },
-  settlementHistoryFrom: {
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  settlementHistoryArrow: {
-    color: '#666',
-  },
-  settlementHistoryTo: {
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  settlementHistoryAmount: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#4caf50',
-  },
-  settlementHistoryDate: {
-    fontSize: 11,
-    color: '#666',
   },
   expenseDialog: {
     maxHeight: '70%',

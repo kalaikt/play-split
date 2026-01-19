@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, ScrollView } from 'react-native';
+import { View, FlatList, StyleSheet, ScrollView, Linking, Share, Platform } from 'react-native';
 import { Button, FAB, List, Dialog, Portal, TextInput, Text, IconButton, Checkbox, Menu } from 'react-native-paper';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
-import { createGroup, getGroups, deleteGroup, getSelectedPlayersForGroup, getAllMasterPlayers, addPlayerToGroup, getExpensesByGroup, recordSettlement, getAllSettlements } from '../database/db';
+import { createGroup, getGroups, deleteGroup, updateGroup, getSelectedPlayersForGroup, getAllMasterPlayers, addPlayerToGroup, getExpensesByGroup, recordSettlement, getAllSettlements, getShuffleState } from '../database/db';
 import { Group, Player, Expense } from '../types';
 import { useCurrency } from '../context/CurrencyContext';
 
@@ -12,7 +13,14 @@ interface GroupsScreenProps {
 
 const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
   const [groups, setGroups] = useState<Group[]>([]);
+  const [groupsWithShuffle, setGroupsWithShuffle] = useState<Set<number>>(new Set());
+  const [groupsWithEndedShuffle, setGroupsWithEndedShuffle] = useState<Set<number>>(new Set());
   const [dialogVisible, setDialogVisible] = useState(false);
+  const [editDialogVisible, setEditDialogVisible] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+  const [editGroupName, setEditGroupName] = useState('');
+  const [editGroupDate, setEditGroupDate] = useState('');
   const [groupName, setGroupName] = useState('Monday');
   const [dayMenuVisible, setDayMenuVisible] = useState(false);
   const [masterPlayers, setMasterPlayers] = useState<Player[]>([]);
@@ -34,6 +42,22 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
   const loadGroups = async () => {
     const fetchedGroups = await getGroups();
     setGroups(fetchedGroups);
+    
+    // Check which groups have shuffle states
+    const activeShuffleStates = new Set<number>();
+    const endedShuffleStates = new Set<number>();
+    for (const group of fetchedGroups) {
+      const shuffleState = await getShuffleState(group.id);
+      if (shuffleState) {
+        if (shuffleState.isEnded) {
+          endedShuffleStates.add(group.id);
+        } else {
+          activeShuffleStates.add(group.id);
+        }
+      }
+    }
+    setGroupsWithShuffle(activeShuffleStates);
+    setGroupsWithEndedShuffle(endedShuffleStates);
     
     // Get all settled transactions
     const settledTransactions = await getAllSettlements();
@@ -142,6 +166,52 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
     await loadGroups(); // Reload to recalculate settlements
   };
 
+  const shareViaWhatsApp = (from: string, to: string, amount: number) => {
+    const message = `Hi ${from}! 👋\n\nJust a friendly reminder about our badminton expenses:\n\nYou owe ${to}: ${currency}${amount.toFixed(2)}\n\nPlease settle up when you get a chance. Thanks! 🏸`;
+    const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
+    Linking.openURL(url).catch(() => {
+      alert('Make sure WhatsApp is installed on your device');
+    });
+  };
+
+  const shareViaSMS = (from: string, to: string, amount: number) => {
+    const message = `Hi ${from}! Just a reminder: You owe ${to} ${currency}${amount.toFixed(2)} for badminton expenses. Please settle up when you can. Thanks!`;
+    const url = `sms:?body=${encodeURIComponent(message)}`;
+    Linking.openURL(url).catch(() => {
+      alert('Unable to open SMS app');
+    });
+  };
+
+  const shareGeneric = async (from: string, to: string, amount: number) => {
+    try {
+      const message = `Hi ${from}!\n\nJust a friendly reminder about our badminton expenses:\n\nYou owe ${to}: ${currency}${amount.toFixed(2)}\n\nPlease settle up when you get a chance. Thanks! 🏸`;
+      await Share.share({
+        message: message,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  const shareAllSettlements = async () => {
+    if (overallSettlements.length === 0) return;
+    
+    try {
+      let message = '💰 Badminton Expenses - Overall Settlement 🏸\n\n';
+      overallSettlements.forEach((transaction, index) => {
+        message += `${index + 1}. ${transaction.from} → ${transaction.to}: ${currency}${transaction.amount.toFixed(2)}\n`;
+      });
+      message += '\nPlease settle up at your earliest convenience. Thanks!';
+      
+      await Share.share({
+        message: message,
+        title: 'Badminton Expenses Settlement'
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   const handleCreateGroup = async () => {
     if (groupName.trim()) {
       const groupId = await createGroup(groupName.trim());
@@ -163,6 +233,36 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
     loadGroups();
   };
 
+  const handleEditGroup = (group: Group) => {
+    setEditingGroup(group);
+    setEditGroupName(group.name);
+    setEditGroupDate(group.createdAt);
+    setEditDialogVisible(true);
+  };
+
+  const handleUpdateGroup = async () => {
+    if (editingGroup && editGroupName.trim()) {
+      await updateGroup(editingGroup.id, editGroupName.trim(), editGroupDate);
+      setEditDialogVisible(false);
+      setEditingGroup(null);
+      setEditGroupName('');
+      setEditGroupDate('');
+      loadGroups();
+    }
+  };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      setEditGroupDate(selectedDate.toISOString());
+      if (Platform.OS === 'ios') {
+        // iOS will be dismissed by the Done button
+      }
+    }
+  };
+
   const togglePlayer = (playerId: number) => {
     const newSelected = new Set(selectedPlayerIds);
     if (newSelected.has(playerId)) {
@@ -179,7 +279,14 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
 
   const navigateToShuffle = async (group: Group) => {
     const players = await getSelectedPlayersForGroup(group.id);
-    navigation.navigate('Shuffle', { group, players });
+    const shuffleState = await getShuffleState(group.id);
+    navigation.navigate('Shuffle', { group, players, shuffleState });
+  };
+
+  const isToday = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
   };
 
   return (
@@ -233,18 +340,24 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
             title={item.name}
             description={new Date(item.createdAt).toLocaleDateString()}
             onPress={() => navigateToPlayers(item)}
-            right={props => (
+            right={props => {
+              const isTodayDate = isToday(item.createdAt);
+              return (
               <View style={styles.actionButtons}>
-                <Button
-                  mode="contained"
-                  onPress={() => navigateToShuffle(item)}
-                  compact
+                <IconButton
+                  icon={groupsWithEndedShuffle.has(item.id) ? "shuffle-variant" : (groupsWithShuffle.has(item.id) ? "play" : "shuffle-variant")}
+                  iconColor={isTodayDate ? "#1976d2" : "#ccc"}
+                  size={24}
+                  onPress={() => isTodayDate && navigateToShuffle(item)}
                   style={styles.shuffleButton}
-                  buttonColor="#1976d2"
-                  theme={{ roundness: 1 }}
-                >
-                  Shuffle
-                </Button>
+                  disabled={!isTodayDate}
+                />
+                <IconButton
+                  icon="pencil"
+                  iconColor="#1976d2"
+                  size={20}
+                  onPress={() => handleEditGroup(item)}
+                />
                 <IconButton
                   icon="delete"
                   iconColor="red"
@@ -252,7 +365,8 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                   onPress={() => handleDeleteGroup(item.id)}
                 />
               </View>
-            )}
+              );
+            }}
             style={styles.listItem}
           />
         )}
@@ -264,7 +378,16 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
         ListFooterComponent={
           overallSettlements.length > 0 ? (
             <View style={styles.overallSettlementContainer}>
-              <Text style={styles.overallSettlementTitle}>Overall Settlement (All Groups)</Text>
+              <View style={styles.overallSettlementHeader}>
+                <Text style={styles.overallSettlementTitle}>Overall Settlement</Text>
+                <IconButton
+                  icon="export-variant"
+                  size={24}
+                  iconColor="#1976d2"
+                  onPress={shareAllSettlements}
+                  style={styles.shareAllButton}
+                />
+              </View>
               {overallSettlements.map((transaction, index) => (
                 <View key={index} style={styles.settlementRow}>
                   <View style={styles.settlementItemWithButton}>
@@ -278,16 +401,39 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                         {currency}{transaction.amount.toFixed(2)}
                       </Text>
                     </View>
-                    <Button
-                      mode="contained"
-                      compact
-                      onPress={() => handleSettleUp(transaction.from, transaction.to, transaction.amount)}
-                      style={styles.settleButton}
-                      buttonColor="#4caf50"
-                      theme={{ roundness: 1 }}
-                    >
-                      Settle Up
-                    </Button>
+                    <View style={styles.settlementActions}>
+                      <IconButton
+                        icon="whatsapp"
+                        size={20}
+                        iconColor="#25D366"
+                        onPress={() => shareViaWhatsApp(transaction.from, transaction.to, transaction.amount)}
+                        style={styles.shareButton}
+                      />
+                      <IconButton
+                        icon="message-text"
+                        size={20}
+                        iconColor="#1976d2"
+                        onPress={() => shareViaSMS(transaction.from, transaction.to, transaction.amount)}
+                        style={styles.shareButton}
+                      />
+                      <IconButton
+                        icon="export-variant"
+                        size={20}
+                        iconColor="#666"
+                        onPress={() => shareGeneric(transaction.from, transaction.to, transaction.amount)}
+                        style={styles.shareButton}
+                      />
+                      <Button
+                        mode="contained"
+                        compact
+                        onPress={() => handleSettleUp(transaction.from, transaction.to, transaction.amount)}
+                        style={styles.settleButton}
+                        buttonColor="#4caf50"
+                        theme={{ roundness: 1 }}
+                      >
+                        Settle Up
+                      </Button>
+                    </View>
                   </View>
                 </View>
               ))}
@@ -370,6 +516,18 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                       style={styles.playerItem}
                     />
                   ))}
+                  <Button
+                    mode="text"
+                    onPress={() => {
+                      setDialogVisible(false);
+                      navigation.navigate('MasterPlayers');
+                    }}
+                    textColor="#1976d2"
+                    icon="plus"
+                    style={styles.addPlayerButton}
+                  >
+                    Add New Player
+                  </Button>
                 </View>
               )}
             </ScrollView>
@@ -378,6 +536,59 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
           <Dialog.Actions>
             <Button onPress={() => setDialogVisible(false)} theme={{ roundness: 1 }}>Cancel</Button>
             <Button onPress={handleCreateGroup} buttonColor="#1976d2" textColor="#fff" theme={{ roundness: 1 }}>Create</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      <Portal>
+        <Dialog visible={editDialogVisible} onDismiss={() => setEditDialogVisible(false)}>
+          <Dialog.Title>Edit Group</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label="Group Name"
+              value={editGroupName}
+              onChangeText={setEditGroupName}
+              mode="outlined"
+              style={styles.dialogInput}
+            />
+            <Button
+              mode="outlined"
+              onPress={() => setShowDatePicker(true)}
+              style={styles.dialogInput}
+              icon="calendar"
+              theme={{ roundness: 1 }}
+            >
+              {new Date(editGroupDate).toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+              })}
+            </Button>
+            {showDatePicker && (
+              <View>
+                <DateTimePicker
+                  value={new Date(editGroupDate)}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleDateChange}
+                />
+                {Platform.OS === 'ios' && (
+                  <Button
+                    mode="contained"
+                    onPress={() => setShowDatePicker(false)}
+                    buttonColor="#1976d2"
+                    style={styles.doneButton}
+                  >
+                    Done
+                  </Button>
+                )}
+              </View>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setEditDialogVisible(false)} theme={{ roundness: 1 }}>Cancel</Button>
+            <Button onPress={handleUpdateGroup} buttonColor="#1976d2" textColor="#fff" theme={{ roundness: 1 }}>Update</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -446,11 +657,20 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
     borderTopColor: '#1976d2',
   },
+  overallSettlementHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   overallSettlementTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#1976d2',
-    marginBottom: 12,
+    flex: 1,
+  },
+  shareAllButton: {
+    margin: 0,
   },
   settlementContainer: {
     backgroundColor: '#f9f9f9',
@@ -476,6 +696,15 @@ const styles = StyleSheet.create({
   settlementItemWithButton: {
     flexDirection: 'column',
     gap: 8,
+  },
+  settlementActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexWrap: 'wrap',
+  },
+  shareButton: {
+    margin: 0,
   },
   settlementTextContainer: {
     flexDirection: 'row',
@@ -510,10 +739,10 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 0,
   },
   shuffleButton: {
-    marginRight: 4,
+    margin: 0,
   },
   emptyContainer: {
     flex: 1,
@@ -543,6 +772,14 @@ const styles = StyleSheet.create({
   },
   playerItem: {
     paddingHorizontal: 0,
+  },
+  addPlayerButton: {
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  doneButton: {
+    marginTop: 12,
+    marginBottom: 8,
   },
   noPlayersContainer: {
     padding: 16,
