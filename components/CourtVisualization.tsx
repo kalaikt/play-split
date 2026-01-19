@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, ImageBackground } from 'react-native';
 import { Card } from 'react-native-paper';
 import { Court } from '../types';
 
@@ -12,32 +12,40 @@ const CourtVisualization: React.FC<CourtVisualizationProps> = ({ court }) => {
   
   return (
     <Card style={styles.card}>
-      <Card.Content>
+      <Card.Content style={styles.cardContent}>
         <Text style={styles.courtTitle}>Court {courtNumber}</Text>
-        <View style={styles.courtContainer}>
-          {/* Net line */}
-          <View style={styles.netLine} />
-          
-          {/* Top side (Team 1) */}
-          <View style={styles.courtSide}>
-            {players.slice(0, 2).map((player, index) => (
-              <View key={player.id} style={styles.playerBox}>
-                <Text style={styles.playerName}>{player.name}</Text>
-                <Text style={styles.playerGrade}>{player.gradeLevel}</Text>
-              </View>
-            ))}
+        <ImageBackground
+          source={require('../assets/badminton-v.png')}
+          style={styles.courtContainer}
+          imageStyle={styles.courtImage}
+        >
+          <View style={styles.overlay}>
+            {/* Top side (Team 1) */}
+            <View style={styles.courtSide}>
+              {players.slice(0, 2).map((player, index) => (
+                <View key={player.id} style={styles.playerBox}>
+                  <Text style={styles.playerName}>{player.name}</Text>
+                  <Text style={styles.playerGrade}>{player.gradeLevel}</Text>
+                </View>
+              ))}
+            </View>
+            
+            {/* Net indicator */}
+            <View style={styles.netIndicator}>
+              <Text style={styles.netText}>NET</Text>
+            </View>
+            
+            {/* Bottom side (Team 2) */}
+            <View style={styles.courtSide}>
+              {players.slice(2, 4).map((player, index) => (
+                <View key={player.id} style={styles.playerBox}>
+                  <Text style={styles.playerName}>{player.name}</Text>
+                  <Text style={styles.playerGrade}>{player.gradeLevel}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-          
-          {/* Bottom side (Team 2) */}
-          <View style={styles.courtSide}>
-            {players.slice(2, 4).map((player, index) => (
-              <View key={player.id} style={styles.playerBox}>
-                <Text style={styles.playerName}>{player.name}</Text>
-                <Text style={styles.playerGrade}>{player.gradeLevel}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        </ImageBackground>
       </Card.Content>
     </Card>
   );
@@ -47,54 +55,86 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
     backgroundColor: '#fff',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  cardContent: {
+    padding: 12,
   },
   courtTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 12,
     color: '#1976d2',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   courtContainer: {
-    borderWidth: 2,
-    borderColor: '#1976d2',
-    borderRadius: 8,
-    padding: 8,
-    minHeight: 200,
+    borderWidth: 3,
+    borderColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+    minHeight: 500,
   },
-  netLine: {
-    height: 2,
-    backgroundColor: '#ff5722',
-    position: 'absolute',
-    top: '50%',
-    left: 8,
-    right: 8,
+  courtImage: {
+    borderRadius: 8,
+    opacity: 0.9,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 12,
   },
   courtSide: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
+  },
+  netIndicator: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 87, 34, 0.8)',
+    marginVertical: 4,
+  },
+  netText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 8,
   },
   playerBox: {
-    backgroundColor: '#e3f2fd',
-    padding: 12,
-    borderRadius: 8,
-    minWidth: 100,
+    backgroundColor: 'rgba(227, 242, 253, 0.95)',
+    padding: 14,
+    borderRadius: 10,
+    minWidth: 110,
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: '#1976d2',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
   },
   playerName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1565c0',
     marginBottom: 4,
+    textAlign: 'center',
   },
   playerGrade: {
     fontSize: 11,
-    color: '#666',
+    color: '#424242',
+    fontWeight: '600',
   },
 });
 
