@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Aadi Pagir",
-    "slug": "aadi-pagir",
+    "name": "PlaySplit",
+    "slug": "playsplit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,21 +16,33 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.playerdraws.app"
+      "bundleIdentifier": "com.playerdraws.app",
+      "googleMobileAdsAppId": "ca-app-pub-3699502919919350~8149306888"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#00897B"
       },
-      "package": "com.aadi.pagir.app"
+      "package": "com.playsplit.app",
+      "googleMobileAdsAppId": "ca-app-pub-3699502919919350~8149306888"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-sqlite",
-      "@react-native-community/datetimepicker"
-    ]
+      "@react-native-community/datetimepicker",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3699502919919350~8149306888",
+          "iosAppId": "ca-app-pub-3699502919919350~8149306888"
+        }
+      ]
+    ],
+    "extra": {
+      "adUnitId": "ca-app-pub-3699502919919350/2022864699"
+    }
   }
 }

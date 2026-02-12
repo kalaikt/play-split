@@ -7,6 +7,7 @@ import { createGroup, getGroups, deleteGroup, updateGroup, getSelectedPlayersFor
 import { Group, Player, Expense } from '../types';
 import { useCurrency } from '../context/CurrencyContext';
 import { Colors } from '../constants/colors';
+import AdBanner from '../components/AdBanner';
 
 interface GroupsScreenProps {
   navigation: any;
@@ -195,7 +196,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
     if (overallSettlements.length === 0) return;
     
     try {
-      let message = '💰 Badminton Expenses - Overall Settlement 🏸\n\n';
+      let message = '💰 Badminton Expenses - Settlements 🏸\n\n';
       overallSettlements.forEach((transaction, index) => {
         message += `${index + 1}. ${transaction.from} → ${transaction.to}: ${currency}${transaction.amount.toFixed(2)}\n`;
       });
@@ -311,7 +312,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
       <View style={styles.appHeader}>
         <View style={styles.headerContent}>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>Aadi Pagir</Text>
+            <Text style={styles.title}>PlaySplit</Text>
             <Text style={styles.subtitle}>Play &amp; Share with friends</Text>
           </View>
           <View style={styles.headerButtons}>
@@ -395,10 +396,14 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
           </View>
         }
         ListFooterComponent={
-          overallSettlements.length > 0 ? (
-            <View style={styles.overallSettlementContainer}>
+          <>
+            <View style={styles.adContainer}>
+              <AdBanner />
+            </View>
+            {overallSettlements.length > 0 ? (
+              <View style={styles.overallSettlementContainer}>
               <View style={styles.overallSettlementHeader}>
-                <Text style={styles.overallSettlementTitle}>Overall Settlement</Text>
+                <Text style={styles.overallSettlementTitle}>Settlements</Text>
                 <IconButton
                   icon="export-variant"
                   size={20}
@@ -457,7 +462,8 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                 </View>
               ))}
             </View>
-          ) : null
+            ) : null}
+          </>
         }
       />
 
@@ -666,6 +672,12 @@ const styles = StyleSheet.create({
   listItem: {
     backgroundColor: Colors.surface,
     marginBottom: 1,
+  },
+  adContainer: {
+    alignItems: 'center',
+    marginVertical: 12,
+    paddingHorizontal: 0,
+    width: '100%',
   },
   overallSettlementContainer: {
     backgroundColor: Colors.surface,
