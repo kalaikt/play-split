@@ -103,6 +103,15 @@ export const initDatabase = async () => {
     // Column likely already exists, ignore the error
   }
 
+  // Migration: Add pairHistory column if it doesn't exist
+  try {
+    await db.execAsync(`
+      ALTER TABLE shuffle_states ADD COLUMN pairHistory TEXT DEFAULT '[]';
+    `);
+  } catch (error: any) {
+    // Column likely already exists, ignore the error
+  }
+
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS players (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -209,13 +218,14 @@ export const saveShuffleState = async (
   shuffleResult: any,
   rotationOrder: Player[],
   rotationIndex: number,
-  isEnded: boolean = false
+  isEnded: boolean = false,
+  pairHistory: string[][] = []
 ): Promise<void> => {
   const database = getDB();
   await database.runAsync(
-    `INSERT OR REPLACE INTO shuffle_states (groupId, numberOfCourts, shuffleResult, rotationOrder, rotationIndex, isEnded, updatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [groupId, numberOfCourts, JSON.stringify(shuffleResult), JSON.stringify(rotationOrder), rotationIndex, isEnded ? 1 : 0, new Date().toISOString()]
+    `INSERT OR REPLACE INTO shuffle_states (groupId, numberOfCourts, shuffleResult, rotationOrder, rotationIndex, isEnded, pairHistory, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [groupId, numberOfCourts, JSON.stringify(shuffleResult), JSON.stringify(rotationOrder), rotationIndex, isEnded ? 1 : 0, JSON.stringify(pairHistory), new Date().toISOString()]
   );
 };
 
@@ -230,7 +240,8 @@ export const getShuffleState = async (groupId: number): Promise<any | null> => {
       ...result,
       shuffleResult: JSON.parse(result.shuffleResult),
       rotationOrder: JSON.parse(result.rotationOrder),
-      isEnded: result.isEnded === 1
+      isEnded: result.isEnded === 1,
+      pairHistory: result.pairHistory ? JSON.parse(result.pairHistory) : []
     };
   }
   return null;

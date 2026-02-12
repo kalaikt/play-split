@@ -4,8 +4,9 @@ export const shufflePlayers = (
   players: Player[], 
   numberOfCourts: number, 
   rotationOrder: Player[] = [],
-  currentRotationIndex: number = 0
-): ShuffleResult & { rotationOrder: Player[], nextRotationIndex: number } => {
+  currentRotationIndex: number = 0,
+  previousPairs: string[][] = []
+): ShuffleResult & { rotationOrder: Player[], nextRotationIndex: number, newPairs: string[][] } => {
   const totalPlayers = players.length;
   const maxCourts = Math.min(numberOfCourts, Math.floor(totalPlayers / 4));
   const spotsNeeded = maxCourts * 4;
@@ -13,22 +14,24 @@ export const shufflePlayers = (
   
   // First shuffle: establish rotation order
   if (rotationOrder.length === 0) {
-    const result = performInitialShuffle(players, maxCourts);
+    const result = performBalancedShuffle(players, maxCourts, players, previousPairs);
     // Create rotation order from all players (playing + waiting)
     const allPlayersInOrder = [
       ...result.courts.flatMap(c => c.players),
       ...result.unassignedPlayers
     ];
     
+    const newPairs = extractPairsFromCourts(result.courts);
+    
     return {
       ...result,
       rotationOrder: allPlayersInOrder,
-      nextRotationIndex: playersToWait // Start rotation from the number who waited
+      nextRotationIndex: playersToWait,
+      newPairs
     };
   }
   
   // Subsequent shuffles: use rotation order for fair, equal rotation
-  // Determine who should wait based on rotation index
   const waitingIndices: number[] = [];
   for (let i = 0; i < playersToWait; i++) {
     const index = (currentRotationIndex + i) % totalPlayers;
@@ -39,34 +42,106 @@ export const shufflePlayers = (
     waitingIndices.map(idx => rotationOrder[idx]?.id).filter(Boolean)
   );
   
-  // Players who will play this round
   const playingPlayers = players.filter(p => !waitingPlayerIds.has(p.id));
   
-  // If not enough players to fill courts, just use whoever is available
   if (playingPlayers.length < spotsNeeded) {
-    const result = performBalancedShuffle(players, maxCourts, players);
+    const result = performBalancedShuffle(players, maxCourts, players, previousPairs);
+    const newPairs = extractPairsFromCourts(result.courts);
     return {
       ...result,
       rotationOrder,
-      nextRotationIndex: (currentRotationIndex + playersToWait) % totalPlayers
+      nextRotationIndex: (currentRotationIndex + playersToWait) % totalPlayers,
+      newPairs
     };
   }
   
-  // Perform balanced shuffle with playing players
-  const result = performBalancedShuffle(playingPlayers, maxCourts, players);
+  const result = performBalancedShuffle(playingPlayers, maxCourts, players, previousPairs);
+  const newPairs = extractPairsFromCourts(result.courts);
   
   return {
     ...result,
     rotationOrder,
-    nextRotationIndex: (currentRotationIndex + playersToWait) % totalPlayers
+    nextRotationIndex: (currentRotationIndex + playersToWait) % totalPlayers,
+    newPairs
   };
 };
 
-const performInitialShuffle = (players: Player[], maxCourts: number): ShuffleResult => {
-  return performBalancedShuffle(players, maxCourts, players);
+// Generate a unique pair key (sorted so order doesn't matter)
+const makePairKey = (id1: number, id2: number): string => {
+  return [id1, id2].sort((a, b) => a - b).join('-');
+};
+
+// Extract all pairs from court assignments
+const extractPairsFromCourts = (courts: Court[]): string[][] => {
+  const pairs: string[][] = [];
+  for (const court of courts) {
+    const courtPairs: string[] = [];
+    for (let i = 0; i < court.players.length; i++) {
+      for (let j = i + 1; j < court.players.length; j++) {
+        courtPairs.push(makePairKey(court.players[i].id, court.players[j].id));
+      }
+    }
+    pairs.push(courtPairs);
+  }
+  return pairs;
+};
+
+// Count how many times a pair has appeared together
+const countPairOccurrences = (pairKey: string, previousPairs: string[][]): number => {
+  let count = 0;
+  for (const round of previousPairs) {
+    if (round.includes(pairKey)) {
+      count++;
+    }
+  }
+  return count;
+};
+
+// Calculate pair repetition score for a court (lower is better)
+const courtPairScore = (courtPlayers: Player[], previousPairs: string[][]): number => {
+  let score = 0;
+  for (let i = 0; i < courtPlayers.length; i++) {
+    for (let j = i + 1; j < courtPlayers.length; j++) {
+      const key = makePairKey(courtPlayers[i].id, courtPlayers[j].id);
+      score += countPairOccurrences(key, previousPairs);
+    }
+  }
+  return score;
 };
 
 const performBalancedShuffle = (
+  playersToAssign: Player[], 
+  maxCourts: number, 
+  allPlayers: Player[],
+  previousPairs: string[][] = []
+): ShuffleResult => {
+  // Try multiple random arrangements and pick the one with fewest repeated pairs
+  let bestResult: ShuffleResult | null = null;
+  let bestScore = Infinity;
+  const attempts = Math.min(20, Math.max(5, previousPairs.length * 2));
+  
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const result = buildCourts(playersToAssign, maxCourts, allPlayers);
+    
+    // Score this arrangement based on pair repetitions
+    let totalScore = 0;
+    for (const court of result.courts) {
+      totalScore += courtPairScore(court.players, previousPairs);
+    }
+    
+    if (totalScore < bestScore) {
+      bestScore = totalScore;
+      bestResult = result;
+    }
+    
+    // Perfect score - no repeated pairs
+    if (totalScore === 0) break;
+  }
+  
+  return bestResult || buildCourts(playersToAssign, maxCourts, allPlayers);
+};
+
+const buildCourts = (
   playersToAssign: Player[], 
   maxCourts: number, 
   allPlayers: Player[]

@@ -21,21 +21,18 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [editGroupName, setEditGroupName] = useState('');
   const [editGroupDate, setEditGroupDate] = useState('');
-  const [groupName, setGroupName] = useState('Monday');
-  const [dayMenuVisible, setDayMenuVisible] = useState(false);
+  const [groupDate, setGroupDate] = useState(new Date());
+  const [showCreateDatePicker, setShowCreateDatePicker] = useState(false);
   const [masterPlayers, setMasterPlayers] = useState<Player[]>([]);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
   const [overallSettlements, setOverallSettlements] = useState<Array<{from: string, to: string, amount: number}>>([]);
   const { currency, setCurrency } = useCurrency();
   const [currencyMenuVisible, setCurrencyMenuVisible] = useState(false);
 
-  useEffect(() => {
-    loadMasterPlayers();
-  }, []);
-
   useFocusEffect(
     React.useCallback(() => {
       loadGroups();
+      loadMasterPlayers();
     }, [])
   );
 
@@ -213,18 +210,31 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
   };
 
   const handleCreateGroup = async () => {
-    if (groupName.trim()) {
-      const groupId = await createGroup(groupName.trim());
-      
-      // Add selected players to the group
-      for (const playerId of selectedPlayerIds) {
-        await addPlayerToGroup(groupId, playerId);
-      }
-      
-      setGroupName('Monday');
-      setSelectedPlayerIds(new Set());
-      setDialogVisible(false);
-      loadGroups();
+    const groupName = groupDate.toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+    const groupId = await createGroup(groupName);
+    
+    // Add selected players to the group
+    for (const playerId of selectedPlayerIds) {
+      await addPlayerToGroup(groupId, playerId);
+    }
+    
+    setGroupDate(new Date());
+    setSelectedPlayerIds(new Set());
+    setDialogVisible(false);
+    loadGroups();
+  };
+
+  const handleCreateDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowCreateDatePicker(false);
+    }
+    if (selectedDate) {
+      setGroupDate(selectedDate);
     }
   };
 
@@ -235,17 +245,23 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
 
   const handleEditGroup = (group: Group) => {
     setEditingGroup(group);
-    setEditGroupName(group.name);
-    setEditGroupDate(group.createdAt);
+    // Try to parse the group name as a date, fallback to current date
+    const parsedDate = new Date(group.name);
+    setEditGroupDate(isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString());
     setEditDialogVisible(true);
   };
 
   const handleUpdateGroup = async () => {
-    if (editingGroup && editGroupName.trim()) {
-      await updateGroup(editingGroup.id, editGroupName.trim(), editGroupDate);
+    if (editingGroup) {
+      const newName = new Date(editGroupDate).toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      await updateGroup(editingGroup.id, newName, editingGroup.createdAt);
       setEditDialogVisible(false);
       setEditingGroup(null);
-      setEditGroupName('');
       setEditGroupDate('');
       loadGroups();
     }
@@ -294,8 +310,8 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
       <View style={styles.appHeader}>
         <View style={styles.headerContent}>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>PlaySplit</Text>
-            <Text style={styles.subtitle}>Split expenses with friends</Text>
+            <Text style={styles.title}>AadiPagir</Text>
+            <Text style={styles.subtitle}>Play &amp; Share with friends</Text>
           </View>
           <View style={styles.headerButtons}>
             <IconButton
@@ -338,7 +354,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
         renderItem={({ item }) => (
           <List.Item
             title={item.name}
-            description={new Date(item.createdAt).toLocaleDateString()}
+            description={`Created: ${new Date(item.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`}
             onPress={() => navigateToPlayers(item)}
             right={props => {
               const isTodayDate = isToday(item.createdAt);
@@ -456,31 +472,31 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
 
       <Portal>
         <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
-          <Dialog.Title>Create New Group</Dialog.Title>
+          <Dialog.Title>Create Group</Dialog.Title>
           <Dialog.Content>
-            <Text style={styles.sectionTitle}>Select Day</Text>
-            <Menu
-              visible={dayMenuVisible}
-              onDismiss={() => setDayMenuVisible(false)}
-              anchor={
-                <Button
-                  mode="outlined"
-                  onPress={() => setDayMenuVisible(true)}
-                  style={styles.dialogInput}
-                  theme={{ roundness: 1 }}
-                >
-                  {groupName}
-                </Button>
-              }
+            <Text style={styles.sectionTitle}>Select Date</Text>
+            <Button
+              mode="outlined"
+              onPress={() => setShowCreateDatePicker(true)}
+              style={styles.dialogInput}
+              icon="calendar"
+              theme={{ roundness: 1 }}
             >
-              <Menu.Item onPress={() => { setGroupName('Monday'); setDayMenuVisible(false); }} title="Monday" />
-              <Menu.Item onPress={() => { setGroupName('Tuesday'); setDayMenuVisible(false); }} title="Tuesday" />
-              <Menu.Item onPress={() => { setGroupName('Wednesday'); setDayMenuVisible(false); }} title="Wednesday" />
-              <Menu.Item onPress={() => { setGroupName('Thursday'); setDayMenuVisible(false); }} title="Thursday" />
-              <Menu.Item onPress={() => { setGroupName('Friday'); setDayMenuVisible(false); }} title="Friday" />
-              <Menu.Item onPress={() => { setGroupName('Saturday'); setDayMenuVisible(false); }} title="Saturday" />
-              <Menu.Item onPress={() => { setGroupName('Sunday'); setDayMenuVisible(false); }} title="Sunday" />
-            </Menu>
+              {groupDate.toLocaleDateString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              })}
+            </Button>
+            {showCreateDatePicker && (
+              <DateTimePicker
+                value={groupDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleCreateDateChange}
+              />
+            )}
             
             <Text style={styles.sectionTitle}>Select Players ({selectedPlayerIds.size})</Text>
             
@@ -544,13 +560,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
         <Dialog visible={editDialogVisible} onDismiss={() => setEditDialogVisible(false)}>
           <Dialog.Title>Edit Group</Dialog.Title>
           <Dialog.Content>
-            <TextInput
-              label="Group Name"
-              value={editGroupName}
-              onChangeText={setEditGroupName}
-              mode="outlined"
-              style={styles.dialogInput}
-            />
+            <Text style={styles.sectionTitle}>Select Date</Text>
             <Button
               mode="outlined"
               onPress={() => setShowDatePicker(true)}
@@ -584,6 +594,11 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                   </Button>
                 )}
               </View>
+            )}
+            {editingGroup && (
+              <Text style={{ color: '#888', fontSize: 12, marginTop: 8 }}>
+                Created: {new Date(editingGroup.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </Text>
             )}
           </Dialog.Content>
           <Dialog.Actions>

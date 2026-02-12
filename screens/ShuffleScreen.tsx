@@ -19,6 +19,7 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
   const [shuffleResult, setShuffleResult] = useState<any>(shuffleState?.shuffleResult || null);
   const [rotationOrder, setRotationOrder] = useState<Player[]>(shuffleState?.rotationOrder || []);
   const [rotationIndex, setRotationIndex] = useState(shuffleState?.rotationIndex || 0);
+  const [pairHistory, setPairHistory] = useState<string[][]>(shuffleState?.pairHistory || []);
   const [isEnded, setIsEnded] = useState(shuffleState?.isEnded === true || shuffleState?.isEnded === 1);
   const [menuVisible, setMenuVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +35,7 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
         setShuffleResult(currentState.shuffleResult);
         setRotationOrder(currentState.rotationOrder);
         setRotationIndex(currentState.rotationIndex);
+        setPairHistory(currentState.pairHistory || []);
       }
       setIsLoading(false);
     };
@@ -51,6 +53,7 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
           setShuffleResult(currentState.shuffleResult);
           setRotationOrder(currentState.rotationOrder);
           setRotationIndex(currentState.rotationIndex);
+          setPairHistory(currentState.pairHistory || []);
         }
       };
       loadShuffleState();
@@ -65,12 +68,17 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
       players, 
       courts, 
       rotationOrder,
-      rotationIndex
+      rotationIndex,
+      pairHistory
     );
+    
+    // Update pair history with new pairs from this round
+    const updatedPairHistory = [...pairHistory, ...result.newPairs];
     
     setShuffleResult(result);
     setRotationOrder(result.rotationOrder);
-    setRotationIndex(result.nextRotationIndex);    
+    setRotationIndex(result.nextRotationIndex);
+    setPairHistory(updatedPairHistory);
     // Save shuffle state to database (preserve isEnded state)
     await saveShuffleState(
       group.id,
@@ -78,7 +86,8 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
       result,
       result.rotationOrder,
       result.nextRotationIndex,
-      isEnded
+      isEnded,
+      updatedPairHistory
     );
   };
 
@@ -90,7 +99,8 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
       shuffleResult,
       rotationOrder,
       rotationIndex,
-      true // isEnded = true
+      true, // isEnded = true
+      pairHistory
     );
   };
 
@@ -102,7 +112,8 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
       shuffleResult,
       rotationOrder,
       rotationIndex,
-      false // isEnded = false
+      false, // isEnded = false
+      pairHistory
     );
   };
 
@@ -113,6 +124,7 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
     setRotationIndex(0);
     setNumberOfCourts(1);
     setIsEnded(false);
+    setPairHistory([]);
   };
 
   const maxCourts = Math.floor(players.length / 4);
