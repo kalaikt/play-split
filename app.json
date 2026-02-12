@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "PlayShare",
-    "slug": "play-share",
+    "name": "Aadi Pagir",
+    "slug": "aadi-pagir",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#00897B"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -21,9 +21,9 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#00897B"
       },
-      "package": "com.playerdraws.app"
+      "package": "com.aadi.pagir.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

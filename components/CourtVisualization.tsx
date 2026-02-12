@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, ImageBackground } from 'react-native';
 import { Card } from 'react-native-paper';
 import { Court } from '../types';
+import { Colors } from '../constants/colors';
 
 interface CourtVisualizationProps {
   court: Court;
@@ -54,9 +55,9 @@ const CourtVisualization: React.FC<CourtVisualizationProps> = ({ court }) => {
 const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: Colors.cardShadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -69,14 +70,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 12,
-    color: '#1976d2',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    color: Colors.primary,
+    textShadowColor: Colors.courtShadow,
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
   courtContainer: {
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: Colors.white,
     borderRadius: 12,
     overflow: 'hidden',
     minHeight: 500,
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.courtOverlay,
     padding: 12,
   },
   courtSide: {
@@ -101,24 +102,24 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 87, 34, 0.8)',
+    backgroundColor: Colors.netIndicator,
     marginVertical: 4,
   },
   netText: {
-    color: '#fff',
+    color: Colors.white,
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 8,
   },
   playerBox: {
-    backgroundColor: 'rgba(227, 242, 253, 0.95)',
+    backgroundColor: Colors.primaryLightTranslucent,
     padding: 14,
     borderRadius: 10,
     minWidth: 110,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#1976d2',
-    shadowColor: '#000',
+    borderColor: Colors.primary,
+    shadowColor: Colors.cardShadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -127,13 +128,13 @@ const styles = StyleSheet.create({
   playerName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1565c0',
+    color: Colors.primaryDark,
     marginBottom: 4,
     textAlign: 'center',
   },
   playerGrade: {
     fontSize: 11,
-    color: '#424242',
+    color: Colors.textPrimary,
     fontWeight: '600',
   },
 });

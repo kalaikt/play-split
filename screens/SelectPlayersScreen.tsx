@@ -4,6 +4,7 @@ import { Button, List, Text, Checkbox, IconButton, Dialog, Portal, TextInput, Me
 import { getAllMasterPlayers, addPlayerToGroup, removePlayerFromGroup, getSelectedPlayersForGroup, createExpense, getExpensesByGroup, updateExpense, deleteExpense } from '../database/db';
 import { Player, Group, GradeLevel, Expense } from '../types';
 import { useCurrency } from '../context/CurrencyContext';
+import { Colors, GradeLevelColors } from '../constants/colors';
 
 interface SelectPlayersScreenProps {
   route: any;
@@ -69,8 +70,6 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
   };
 
   const handleSaveExpense = async () => {
-    console.log('Save clicked', { expenseAmount, paidBy, expenseTitle });
-    
     // Reset errors
     setTitleError(false);
     setAmountError(false);
@@ -80,19 +79,16 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
     let hasError = false;
     
     if (!expenseTitle || !expenseTitle.trim()) {
-      console.log('Title is empty');
       setTitleError(true);
       hasError = true;
     }
     
     if (!expenseAmount || isNaN(parseFloat(expenseAmount))) {
-      console.log('Amount is invalid');
       setAmountError(true);
       hasError = true;
     }
     
     if (!paidBy || !paidBy.trim()) {
-      console.log('Paid by is empty');
       setPaidByError(true);
       hasError = true;
     }
@@ -103,15 +99,12 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
     
     try {
       const amount = parseFloat(expenseAmount);
-      console.log('Saving expense...', { amount, paidBy, expenseTitle });
       
       if (editingExpense) {
         await updateExpense(editingExpense.id, amount, paidBy, expenseTitle);
       } else {
         await createExpense(group.id, amount, paidBy, expenseTitle);
       }
-      
-      console.log('Expense saved successfully');
       
       setExpenseDialogVisible(false);
       setExpenseListVisible(false);
@@ -158,12 +151,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
   };
 
   const getGradeLevelColor = (level: GradeLevel) => {
-    switch (level) {
-      case 'Beginner': return '#4caf50';
-      case 'Intermediate': return '#ff9800';
-      case 'Professional': return '#f44336';
-      default: return '#757575';
-    }
+    return GradeLevelColors[level] || Colors.textDisabled;
   };
 
   return (
@@ -173,7 +161,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
           <View style={styles.titleContainer}>
             <IconButton
               icon="arrow-left"
-              iconColor="#fff"
+              iconColor={Colors.white}
               size={24}
               onPress={() => navigation.goBack()}
               style={styles.backButton}
@@ -199,15 +187,15 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
         {/* Players Section */}
         {allPlayers.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text>No master players available.</Text>
+            <Text>No players available.</Text>
             <Button
               mode="contained"
               onPress={() => navigation.navigate('MasterPlayers')}
               style={styles.addButton}
-              buttonColor="#1976d2"
+              buttonColor={Colors.primary}
               theme={{ roundness: 1 }}
             >
-              Add Master Players
+              Add Players
             </Button>
           </View>
         ) : (
@@ -247,7 +235,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
                 mode="contained"
                 onPress={openAddExpenseDialog}
                 compact
-                buttonColor="#1976d2"
+                buttonColor={Colors.primary}
                 theme={{ roundness: 1 }}
               >
                 Add
@@ -275,7 +263,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
                   <IconButton
                     icon="delete"
                     size={20}
-                    iconColor="red"
+                    iconColor={Colors.error}
                     onPress={() => handleDeleteExpense(expense.id)}
                   />
                 </View>
@@ -291,7 +279,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
               mode="contained"
               onPress={openAddExpenseDialog}
               style={styles.addButton}
-              buttonColor="#1976d2"
+              buttonColor={Colors.primary}
               theme={{ roundness: 1 }}
             >
               Add Expense
@@ -334,7 +322,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
                       <IconButton
                         icon="delete"
                         size={20}
-                        iconColor="red"
+                        iconColor={Colors.error}
                         onPress={() => handleDeleteExpense(expense.id)}
                       />
                     </View>
@@ -344,7 +332,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
             )}
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={openAddExpenseDialog} buttonColor="#1976d2" textColor="#fff" theme={{ roundness: 1 }}>Add Expense</Button>
+            <Button onPress={openAddExpenseDialog} buttonColor={Colors.primary} textColor={Colors.white} theme={{ roundness: 1 }}>Add Expense</Button>
             <Button onPress={() => setExpenseListVisible(false)} theme={{ roundness: 1 }}>Close</Button>
           </Dialog.Actions>
         </Dialog>
@@ -390,7 +378,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
                   onPress={() => setPayerMenuVisible(true)}
                   style={[styles.input, paidByError && styles.errorButton]}
                   theme={{ roundness: 1 }}
-                  textColor={paidByError ? '#f44336' : undefined}
+                  textColor={paidByError ? Colors.error : undefined}
                 >
                   {paidBy || 'Select Player'}
                 </Button>
@@ -415,7 +403,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setExpenseDialogVisible(false)} theme={{ roundness: 1 }}>Cancel</Button>
-            <Button onPress={handleSaveExpense} buttonColor="#1976d2" textColor="#fff" theme={{ roundness: 1 }}>Save</Button>
+            <Button onPress={handleSaveExpense} buttonColor={Colors.primary} textColor={Colors.white} theme={{ roundness: 1 }}>Save</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -426,10 +414,10 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   appHeader: {
-    backgroundColor: '#1976d2',
+    backgroundColor: Colors.primary,
     padding: 16,
     paddingTop: 50,
   },
@@ -445,27 +433,28 @@ const styles = StyleSheet.create({
   },
   backButton: {
     margin: 0,
+    backgroundColor: 'transparent',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.white,
   },
   subtitle: {
     fontSize: 14,
-    color: '#fff',
+    color: Colors.white,
     marginTop: 2,
     opacity: 0.9,
   },
   expenseInfoBar: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: Colors.primaryLight,
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1976d2',
+    borderBottomColor: Colors.primary,
   },
   expenseInfo: {
     fontSize: 13,
-    color: '#1976d2',
+    color: Colors.primaryDark,
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -473,7 +462,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listItem: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     marginBottom: 1,
   },
   leftContent: {
@@ -509,14 +498,14 @@ const styles = StyleSheet.create({
   expensesSectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.textPrimary,
   },
   noExpensesContainer: {
     padding: 20,
     alignItems: 'center',
   },
   noExpensesText: {
-    color: '#999',
+    color: Colors.textDisabled,
     marginBottom: 12,
   },
   expenseDialog: {
@@ -527,7 +516,7 @@ const styles = StyleSheet.create({
   },
   noExpenses: {
     textAlign: 'center',
-    color: '#999',
+    color: Colors.textDisabled,
     padding: 20,
   },
   expenseItem: {
@@ -536,10 +525,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     padding: 12,
     marginBottom: 8,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: Colors.surfaceVariant,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: Colors.border,
   },
   expenseDetailsColumn: {
     flex: 1,
@@ -547,7 +536,7 @@ const styles = StyleSheet.create({
   expenseTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
   expenseRow: {
@@ -557,20 +546,20 @@ const styles = StyleSheet.create({
   },
   expenseLabel: {
     fontSize: 13,
-    color: '#666',
+    color: Colors.textSecondary,
   },
   expenseAmount: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1976d2',
+    color: Colors.primary,
   },
   expensePaidBy: {
     fontSize: 13,
-    color: '#333',
+    color: Colors.textPrimary,
   },
   expenseDescription: {
     fontSize: 12,
-    color: '#999',
+    color: Colors.textDisabled,
     marginTop: 2,
   },
   expenseActions: {
@@ -580,18 +569,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   errorText: {
-    color: '#f44336',
+    color: Colors.error,
     fontSize: 12,
     marginTop: 4,
     marginLeft: 12,
   },
   errorButton: {
-    borderColor: '#f44336',
+    borderColor: Colors.error,
     borderWidth: 2,
   },
   label: {
     fontSize: 12,
-    color: '#666',
+    color: Colors.textSecondary,
     marginTop: 12,
     marginBottom: 4,
   },

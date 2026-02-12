@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, ScrollView } from 'react-native';
-import { Button, FAB, List, Dialog, Portal, TextInput, Text, Menu, IconButton } from 'react-native-paper';
+import { Button, List, Dialog, Portal, TextInput, Text, Menu, IconButton } from 'react-native-paper';
 import { createMasterPlayer, getAllMasterPlayers, updateMasterPlayer, deleteMasterPlayer, getAllSettlements } from '../database/db';
 import { Player, GradeLevel, Settlement } from '../types';
 import { useCurrency } from '../context/CurrencyContext';
+import { Colors, GradeLevelColors } from '../constants/colors';
 
 interface MasterPlayersScreenProps {
   navigation: any;
@@ -77,12 +78,7 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
   };
 
   const getGradeLevelColor = (level: GradeLevel) => {
-    switch (level) {
-      case 'Beginner': return '#4caf50';
-      case 'Intermediate': return '#ff9800';
-      case 'Professional': return '#f44336';
-      default: return '#757575';
-    }
+    return GradeLevelColors[level] || Colors.textDisabled;
   };
 
   return (
@@ -92,7 +88,7 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
           <View style={styles.titleContainer}>
             <IconButton
               icon="arrow-left"
-              iconColor="#fff"
+              iconColor={Colors.white}
               size={24}
               onPress={() => navigation.goBack()}
               style={styles.backButton}
@@ -102,6 +98,13 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
               <Text style={styles.subtitle}>Manage all players</Text>
             </View>
           </View>
+          <IconButton
+            icon="plus"
+            iconColor={Colors.white}
+            size={28}
+            onPress={() => setDialogVisible(true)}
+            style={styles.addButton}
+          />
         </View>
       </View>
       <ScrollView style={styles.content}>
@@ -120,17 +123,20 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
             )}
             right={props => (
               <View style={styles.actions}>
-                <Button mode="text" onPress={() => handleEditPlayer(item)} theme={{ roundness: 1 }}>
-                  Edit
-                </Button>
-                <Button
-                  mode="text"
+                <IconButton
+                  icon="pencil"
+                  iconColor={Colors.white}
+                  size={16}
+                  onPress={() => handleEditPlayer(item)}
+                  style={[styles.circleIconSmall, { backgroundColor: Colors.primary }]}
+                />
+                <IconButton
+                  icon="delete"
+                  iconColor={Colors.white}
+                  size={16}
                   onPress={() => handleDeletePlayer(item.id)}
-                  textColor="red"
-                  theme={{ roundness: 1 }}
-                >
-                  Delete
-                </Button>
+                  style={[styles.circleIconSmall, { backgroundColor: Colors.error }]}
+                />
               </View>
             )}
             style={styles.listItem}
@@ -163,18 +169,9 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
         )}
       </ScrollView>
 
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => setDialogVisible(true)}
-        color="#fff"
-        customSize={56}
-        backgroundColor="#1976d2"
-      />
-
       <Portal>
         <Dialog visible={dialogVisible} onDismiss={resetForm}>
-          <Dialog.Title>{editMode ? 'Edit Player' : 'Add New Player'}</Dialog.Title>
+          <Dialog.Title>{editMode ? 'Edit Player' : 'Add Player'}</Dialog.Title>
           <Dialog.Content>
             <TextInput
               label="Player Name"
@@ -205,7 +202,7 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={resetForm} theme={{ roundness: 1 }}>Cancel</Button>
-            <Button onPress={handleSavePlayer} buttonColor="#1976d2" textColor="#fff" theme={{ roundness: 1 }}>Save</Button>
+            <Button onPress={handleSavePlayer} buttonColor={Colors.primary} textColor={Colors.white} theme={{ roundness: 1 }}>Save</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -216,10 +213,10 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   appHeader: {
-    backgroundColor: '#1976d2',
+    backgroundColor: Colors.primary,
     padding: 16,
     paddingTop: 50,
   },
@@ -235,15 +232,16 @@ const styles = StyleSheet.create({
   },
   backButton: {
     margin: 0,
+    backgroundColor: 'transparent',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.white,
   },
   subtitle: {
     fontSize: 14,
-    color: '#fff',
+    color: Colors.white,
     marginTop: 2,
     opacity: 0.9,
   },
@@ -251,7 +249,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listItem: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     marginBottom: 1,
   },
   gradeBadge: {
@@ -263,6 +261,13 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
+    alignItems: 'center',
+  },
+  circleIconSmall: {
+    borderRadius: 18,
+    width: 32,
+    height: 32,
+    margin: 2,
   },
   emptyContainer: {
     flex: 1,
@@ -271,10 +276,9 @@ const styles = StyleSheet.create({
     padding: 20,
     marginTop: 50,
   },
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
+  addButton: {
+    margin: 0,
+    backgroundColor: 'transparent',
   },
   input: {
     marginBottom: 12,
@@ -283,23 +287,23 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 16,
     paddingBottom: 20,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     marginBottom: 8,
   },
   settlementHistoryTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.textPrimary,
     marginBottom: 12,
     marginTop: 12,
   },
   settlementHistoryItem: {
     padding: 12,
     marginBottom: 8,
-    backgroundColor: '#e8f5e9',
+    backgroundColor: Colors.lightGreenBg,
     borderRadius: 4,
     borderLeftWidth: 4,
-    borderLeftColor: '#4caf50',
+    borderLeftColor: Colors.success,
   },
   settlementHistoryDetails: {
     flexDirection: 'row',
@@ -312,24 +316,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settlementHistoryFrom: {
-    color: '#333',
+    color: Colors.textPrimary,
     fontWeight: 'bold',
   },
   settlementHistoryArrow: {
-    color: '#666',
+    color: Colors.textSecondary,
   },
   settlementHistoryTo: {
-    color: '#333',
+    color: Colors.textPrimary,
     fontWeight: 'bold',
   },
   settlementHistoryAmount: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#4caf50',
+    color: Colors.success,
   },
   settlementHistoryDate: {
     fontSize: 11,
-    color: '#666',
+    color: Colors.textSecondary,
   },
 });
 

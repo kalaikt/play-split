@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, ScrollView, Linking, Share, Platform } from 'react-native';
+import { View, FlatList, StyleSheet, ScrollView, Linking, Share, Platform, Alert } from 'react-native';
 import { Button, FAB, List, Dialog, Portal, TextInput, Text, IconButton, Checkbox, Menu } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { createGroup, getGroups, deleteGroup, updateGroup, getSelectedPlayersForGroup, getAllMasterPlayers, addPlayerToGroup, getExpensesByGroup, recordSettlement, getAllSettlements, getShuffleState } from '../database/db';
 import { Group, Player, Expense } from '../types';
 import { useCurrency } from '../context/CurrencyContext';
+import { Colors } from '../constants/colors';
 
 interface GroupsScreenProps {
   navigation: any;
@@ -167,7 +168,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
     const message = `Hi ${from}! 👋\n\nJust a friendly reminder about our badminton expenses:\n\nYou owe ${to}: ${currency}${amount.toFixed(2)}\n\nPlease settle up when you get a chance. Thanks! 🏸`;
     const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
     Linking.openURL(url).catch(() => {
-      alert('Make sure WhatsApp is installed on your device');
+      Alert.alert('Error', 'Make sure WhatsApp is installed on your device');
     });
   };
 
@@ -175,7 +176,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
     const message = `Hi ${from}! Just a reminder: You owe ${to} ${currency}${amount.toFixed(2)} for badminton expenses. Please settle up when you can. Thanks!`;
     const url = `sms:?body=${encodeURIComponent(message)}`;
     Linking.openURL(url).catch(() => {
-      alert('Unable to open SMS app');
+      Alert.alert('Error', 'Unable to open SMS app');
     });
   };
 
@@ -310,13 +311,13 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
       <View style={styles.appHeader}>
         <View style={styles.headerContent}>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>AadiPagir</Text>
+            <Text style={styles.title}>Aadi Pagir</Text>
             <Text style={styles.subtitle}>Play &amp; Share with friends</Text>
           </View>
           <View style={styles.headerButtons}>
             <IconButton
               icon="account-group"
-              iconColor="#fff"
+              iconColor={Colors.white}
               size={24}
               onPress={() => navigation.navigate('MasterPlayers')}
               style={styles.playersButton}
@@ -329,8 +330,8 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                   mode="contained"
                   onPress={() => setCurrencyMenuVisible(true)}
                   style={styles.currencyButton}
-                  buttonColor="rgba(255, 255, 255, 0.2)"
-                  textColor="#fff"
+                  buttonColor={Colors.transparentWhite}
+                  textColor={Colors.white}
                   compact
                 >
                   {currency}
@@ -362,23 +363,25 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
               <View style={styles.actionButtons}>
                 <IconButton
                   icon={groupsWithEndedShuffle.has(item.id) ? "shuffle-variant" : (groupsWithShuffle.has(item.id) ? "play" : "shuffle-variant")}
-                  iconColor={isTodayDate ? "#1976d2" : "#ccc"}
-                  size={24}
+                  iconColor={isTodayDate ? Colors.white : Colors.disabled}
+                  size={18}
                   onPress={() => isTodayDate && navigateToShuffle(item)}
-                  style={styles.shuffleButton}
+                  style={[styles.circleIconSmall, isTodayDate && { backgroundColor: Colors.primary }]}
                   disabled={!isTodayDate}
                 />
                 <IconButton
                   icon="pencil"
-                  iconColor="#1976d2"
-                  size={20}
+                  iconColor={Colors.white}
+                  size={16}
                   onPress={() => handleEditGroup(item)}
+                  style={[styles.circleIconSmall, { backgroundColor: Colors.primary }]}
                 />
                 <IconButton
                   icon="delete"
-                  iconColor="red"
-                  size={20}
+                  iconColor={Colors.white}
+                  size={16}
                   onPress={() => handleDeleteGroup(item.id)}
+                  style={[styles.circleIconSmall, { backgroundColor: Colors.error }]}
                 />
               </View>
               );
@@ -398,10 +401,10 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                 <Text style={styles.overallSettlementTitle}>Overall Settlement</Text>
                 <IconButton
                   icon="export-variant"
-                  size={24}
-                  iconColor="#1976d2"
+                  size={20}
+                  iconColor={Colors.white}
                   onPress={shareAllSettlements}
-                  style={styles.shareAllButton}
+                  style={[styles.shareAllButton, styles.circleIcon, { backgroundColor: Colors.primary }]}
                 />
               </View>
               {overallSettlements.map((transaction, index) => (
@@ -420,31 +423,31 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                     <View style={styles.settlementActions}>
                       <IconButton
                         icon="whatsapp"
-                        size={20}
-                        iconColor="#25D366"
+                        size={16}
+                        iconColor={Colors.white}
                         onPress={() => shareViaWhatsApp(transaction.from, transaction.to, transaction.amount)}
-                        style={styles.shareButton}
+                        style={[styles.shareButton, styles.circleIcon, { backgroundColor: Colors.whatsapp }]}
                       />
                       <IconButton
                         icon="message-text"
-                        size={20}
-                        iconColor="#1976d2"
+                        size={16}
+                        iconColor={Colors.white}
                         onPress={() => shareViaSMS(transaction.from, transaction.to, transaction.amount)}
-                        style={styles.shareButton}
+                        style={[styles.shareButton, styles.circleIcon, { backgroundColor: Colors.primary }]}
                       />
                       <IconButton
                         icon="export-variant"
-                        size={20}
-                        iconColor="#666"
+                        size={16}
+                        iconColor={Colors.white}
                         onPress={() => shareGeneric(transaction.from, transaction.to, transaction.amount)}
-                        style={styles.shareButton}
+                        style={[styles.shareButton, styles.circleIcon, { backgroundColor: Colors.textSecondary }]}
                       />
                       <Button
                         mode="contained"
                         compact
                         onPress={() => handleSettleUp(transaction.from, transaction.to, transaction.amount)}
                         style={styles.settleButton}
-                        buttonColor="#4caf50"
+                        buttonColor={Colors.success}
                         theme={{ roundness: 1 }}
                       >
                         Settle Up
@@ -460,14 +463,13 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
 
       <FAB
         icon="plus"
-        style={styles.fab}
         onPress={() => {
           setSelectedPlayerIds(new Set());
           setDialogVisible(true);
         }}
-        color="#fff"
+        color={Colors.white}
         customSize={56}
-        backgroundColor="#1976d2"
+        style={[styles.fab, { backgroundColor: Colors.primary }]}
       />
 
       <Portal>
@@ -503,16 +505,16 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
             <ScrollView style={styles.playersScrollView} nestedScrollEnabled>
               {masterPlayers.length === 0 ? (
                 <View style={styles.noPlayersContainer}>
-                  <Text style={styles.noPlayersText}>No master players available</Text>
+                  <Text style={styles.noPlayersText}>No players available</Text>
                   <Button
                     mode="text"
                     onPress={() => {
                       setDialogVisible(false);
                       navigation.navigate('MasterPlayers');
                     }}
-                    textColor="#1976d2"
+                    textColor={Colors.primary}
                   >
-                    Add Master Players
+                    Add Players
                   </Button>
                 </View>
               ) : (
@@ -538,11 +540,10 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                       setDialogVisible(false);
                       navigation.navigate('MasterPlayers');
                     }}
-                    textColor="#1976d2"
-                    icon="plus"
+                    textColor={Colors.primary}
                     style={styles.addPlayerButton}
                   >
-                    Add New Player
+                    Add Player
                   </Button>
                 </View>
               )}
@@ -551,7 +552,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
           
           <Dialog.Actions>
             <Button onPress={() => setDialogVisible(false)} theme={{ roundness: 1 }}>Cancel</Button>
-            <Button onPress={handleCreateGroup} buttonColor="#1976d2" textColor="#fff" theme={{ roundness: 1 }}>Create</Button>
+            <Button onPress={handleCreateGroup} buttonColor={Colors.primary} textColor={Colors.white} theme={{ roundness: 1 }}>Create</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -587,8 +588,9 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
                   <Button
                     mode="contained"
                     onPress={() => setShowDatePicker(false)}
-                    buttonColor="#1976d2"
+                    buttonColor={Colors.primary}
                     style={styles.doneButton}
+                    theme={{ roundness: 1 }}
                   >
                     Done
                   </Button>
@@ -596,14 +598,14 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
               </View>
             )}
             {editingGroup && (
-              <Text style={{ color: '#888', fontSize: 12, marginTop: 8 }}>
+              <Text style={styles.createdDateText}>
                 Created: {new Date(editingGroup.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
               </Text>
             )}
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setEditDialogVisible(false)} theme={{ roundness: 1 }}>Cancel</Button>
-            <Button onPress={handleUpdateGroup} buttonColor="#1976d2" textColor="#fff" theme={{ roundness: 1 }}>Update</Button>
+            <Button onPress={handleUpdateGroup} buttonColor={Colors.primary} textColor={Colors.white} theme={{ roundness: 1 }}>Update</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -614,10 +616,10 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   appHeader: {
-    backgroundColor: '#1976d2',
+    backgroundColor: Colors.primary,
     padding: 16,
     paddingTop: 50,
   },
@@ -632,12 +634,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
-    letterSpacing: 2,
+    color: Colors.white,
   },
   subtitle: {
     fontSize: 14,
-    color: '#fff',
+    color: Colors.white,
     marginTop: 4,
     opacity: 0.9,
   },
@@ -651,26 +652,27 @@ const styles = StyleSheet.create({
   },
   playersButton: {
     margin: 0,
+    backgroundColor: 'transparent',
   },
   masterPlayersHeader: {
     padding: 12,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: Colors.border,
   },
   masterPlayersButton: {
     width: '100%',
   },
   listItem: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     marginBottom: 1,
   },
   overallSettlementContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     padding: 16,
     marginTop: 12,
     borderTopWidth: 2,
-    borderTopColor: '#1976d2',
+    borderTopColor: Colors.primary,
   },
   overallSettlementHeader: {
     flexDirection: 'row',
@@ -681,23 +683,23 @@ const styles = StyleSheet.create({
   overallSettlementTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1976d2',
+    color: Colors.primary,
     flex: 1,
   },
   shareAllButton: {
     margin: 0,
   },
   settlementContainer: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: Colors.surfaceVariant,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: Colors.border,
   },
   settlementTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#666',
+    color: Colors.textSecondary,
     marginBottom: 8,
   },
   settlementRow: {
@@ -721,6 +723,11 @@ const styles = StyleSheet.create({
   shareButton: {
     margin: 0,
   },
+  circleIcon: {
+    borderRadius: 20,
+    width: 34,
+    height: 34,
+  },
   settlementTextContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -731,21 +738,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settlementFrom: {
-    color: '#f44336',
+    color: Colors.error,
     fontWeight: 'bold',
   },
   settlementArrow: {
-    color: '#666',
+    color: Colors.textSecondary,
     fontSize: 16,
   },
   settlementTo: {
-    color: '#4caf50',
+    color: Colors.success,
     fontWeight: 'bold',
   },
   settlementAmount: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1976d2',
+    color: Colors.primary,
     marginLeft: 8,
   },
   settleButton: {
@@ -758,6 +765,12 @@ const styles = StyleSheet.create({
   },
   shuffleButton: {
     margin: 0,
+  },
+  circleIconSmall: {
+    borderRadius: 18,
+    width: 32,
+    height: 32,
+    margin: 2,
   },
   emptyContainer: {
     flex: 1,
@@ -779,7 +792,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 8,
     marginBottom: 8,
-    color: '#333',
+    color: Colors.textPrimary,
   },
   playersScrollView: {
     maxHeight: 250,
@@ -802,7 +815,12 @@ const styles = StyleSheet.create({
   },
   noPlayersText: {
     marginBottom: 8,
-    color: '#666',
+    color: Colors.textSecondary,
+  },
+  createdDateText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    marginTop: 8,
   },
 });
 

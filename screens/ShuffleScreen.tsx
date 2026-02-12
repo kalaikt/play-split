@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { TextInput, Button, Text, Divider, Menu, IconButton } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { Player, Group } from '../types';
+import { Colors } from '../constants/colors';
 import { shufflePlayers } from '../utils/shuffleAlgorithm';
 import CourtVisualization from '../components/CourtVisualization';
 import { saveShuffleState, deleteShuffleState, getShuffleState } from '../database/db';
@@ -137,7 +138,7 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
           <View style={styles.titleContainer}>
             <IconButton
               icon="arrow-left"
-              iconColor="#fff"
+              iconColor={Colors.white}
               size={24}
               onPress={() => navigation.goBack()}
               style={styles.backButton}
@@ -201,7 +202,7 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
             onPress={handleShuffle}
             style={styles.button}
             disabled={players.length < 4 || isEnded}
-            buttonColor="#1976d2"
+            buttonColor={Colors.primary}
             theme={{ roundness: 1 }}
           >
             {rotationOrder.length > 0 ? 'Next Round (Rotate Players)' : 'Start First Round'}
@@ -210,9 +211,8 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
           {shuffleResult && (
             <View style={styles.buttonRow}>
               <Button
-                mode="outlined"
+                mode="contained"
                 onPress={() => {
-                  console.log('Button clicked - isEnded:', isEnded);
                   if (isEnded) {
                     handleReplay();
                   } else {
@@ -220,8 +220,8 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
                   }
                 }}
                 style={styles.halfButton}
-                buttonColor={isEnded ? "#ff9800" : "#4caf50"}
-                textColor="#fff"
+                buttonColor={isEnded ? Colors.warning : Colors.success}
+                textColor={Colors.white}
                 theme={{ roundness: 1 }}
               >
                 {isEnded ? 'Replay' : 'End'}
@@ -230,7 +230,7 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
                 mode="outlined"
                 onPress={handleClearShuffle}
                 style={styles.halfButton}
-                textColor="#f44336"
+                textColor={Colors.error}
                 theme={{ roundness: 1 }}
               >
                 Clear Shuffle
@@ -280,10 +280,10 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   appHeader: {
-    backgroundColor: '#1976d2',
+    backgroundColor: Colors.primary,
     padding: 16,
     paddingTop: 50,
   },
@@ -299,21 +299,22 @@ const styles = StyleSheet.create({
   },
   backButton: {
     margin: 0,
+    backgroundColor: 'transparent',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.white,
   },
   subtitle: {
     fontSize: 14,
-    color: '#fff',
+    color: Colors.white,
     marginTop: 2,
     opacity: 0.9,
   },
   content: {
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
   },
   scrollContent: {
     flex: 1,
@@ -323,21 +324,21 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 12,
-    color: '#666',
+    color: Colors.textSecondary,
     marginBottom: 16,
   },
   priorityHint: {
     fontSize: 13,
-    color: '#1976d2',
+    color: Colors.primary,
     marginBottom: 12,
     fontWeight: '500',
   },
   endedHint: {
     fontSize: 13,
-    color: '#f44336',
+    color: Colors.error,
     marginBottom: 12,
     fontWeight: '600',
-    backgroundColor: '#ffebee',
+    backgroundColor: Colors.lightRedBg,
     padding: 10,
     borderRadius: 4,
   },
@@ -362,10 +363,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#1976d2',
+    color: Colors.primary,
   },
   waitingList: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderRadius: 8,
     padding: 12,
   },
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: Colors.border,
   },
   waitingPlayerName: {
     fontSize: 16,
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
   },
   waitingPlayerGrade: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.textSecondary,
   },
 });
 

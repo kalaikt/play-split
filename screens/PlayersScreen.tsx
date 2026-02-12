@@ -3,6 +3,7 @@ import { View, FlatList, StyleSheet } from 'react-native';
 import { Button, FAB, List, Dialog, Portal, TextInput, Text, Menu, IconButton } from 'react-native-paper';
 import { createPlayer, getPlayersByGroup, updatePlayer, deletePlayer } from '../database/db';
 import { Player, GradeLevel, Group } from '../types';
+import { Colors, GradeLevelColors } from '../constants/colors';
 
 interface PlayersScreenProps {
   route: any;
@@ -62,12 +63,7 @@ const PlayersScreen: React.FC<PlayersScreenProps> = ({ route, navigation }) => {
   };
 
   const getGradeLevelColor = (level: GradeLevel) => {
-    switch (level) {
-      case 'Beginner': return '#4caf50';
-      case 'Intermediate': return '#ff9800';
-      case 'Professional': return '#f44336';
-      default: return '#757575';
-    }
+    return GradeLevelColors[level] || Colors.textDisabled;
   };
 
   return (
@@ -77,7 +73,7 @@ const PlayersScreen: React.FC<PlayersScreenProps> = ({ route, navigation }) => {
           <View style={styles.titleContainer}>
             <IconButton
               icon="arrow-left"
-              iconColor="#fff"
+              iconColor={Colors.white}
               size={24}
               onPress={() => navigation.goBack()}
               style={styles.backButton}
@@ -107,17 +103,20 @@ const PlayersScreen: React.FC<PlayersScreenProps> = ({ route, navigation }) => {
             )}
             right={props => (
               <View style={styles.actions}>
-                <Button mode="text" onPress={() => handleEditPlayer(item)} theme={{ roundness: 1 }}>
-                  Edit
-                </Button>
-                <Button
-                  mode="text"
+                <IconButton
+                  icon="pencil"
+                  iconColor={Colors.white}
+                  size={16}
+                  onPress={() => handleEditPlayer(item)}
+                  style={[styles.circleIconSmall, { backgroundColor: Colors.primary }]}
+                />
+                <IconButton
+                  icon="delete"
+                  iconColor={Colors.white}
+                  size={16}
                   onPress={() => handleDeletePlayer(item.id)}
-                  textColor="red"
-                  theme={{ roundness: 1 }}
-                >
-                  Delete
-                </Button>
+                  style={[styles.circleIconSmall, { backgroundColor: Colors.error }]}
+                />
               </View>
             )}
             style={styles.listItem}
@@ -132,17 +131,16 @@ const PlayersScreen: React.FC<PlayersScreenProps> = ({ route, navigation }) => {
 
       <FAB
         icon="plus"
-        style={styles.fab}
         onPress={() => setDialogVisible(true)}
-        color="#fff"
+        color={Colors.white}
         customSize={56}
-        backgroundColor="#1976d2"
+        style={[styles.fab, { backgroundColor: Colors.primary }]}
       />
       </View>
 
       <Portal>
         <Dialog visible={dialogVisible} onDismiss={resetForm}>
-          <Dialog.Title>{editMode ? 'Edit Player' : 'Add New Player'}</Dialog.Title>
+          <Dialog.Title>{editMode ? 'Edit Player' : 'Add Player'}</Dialog.Title>
           <Dialog.Content>
             <TextInput
               label="Player Name"
@@ -173,7 +171,7 @@ const PlayersScreen: React.FC<PlayersScreenProps> = ({ route, navigation }) => {
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={resetForm} theme={{ roundness: 1 }}>Cancel</Button>
-            <Button onPress={handleSavePlayer} buttonColor="#1976d2" textColor="#fff" theme={{ roundness: 1 }}>Save</Button>
+            <Button onPress={handleSavePlayer} buttonColor={Colors.primary} textColor={Colors.white} theme={{ roundness: 1 }}>Save</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -184,10 +182,10 @@ const PlayersScreen: React.FC<PlayersScreenProps> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   appHeader: {
-    backgroundColor: '#1976d2',
+    backgroundColor: Colors.primary,
     padding: 16,
     paddingTop: 50,
   },
@@ -203,15 +201,16 @@ const styles = StyleSheet.create({
   },
   backButton: {
     margin: 0,
+    backgroundColor: 'transparent',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.white,
   },
   subtitle: {
     fontSize: 14,
-    color: '#fff',
+    color: Colors.white,
     marginTop: 2,
     opacity: 0.9,
   },
@@ -219,7 +218,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listItem: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     marginBottom: 1,
   },
   gradeBadge: {
@@ -231,6 +230,13 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
+    alignItems: 'center',
+  },
+  circleIconSmall: {
+    borderRadius: 18,
+    width: 32,
+    height: 32,
+    margin: 2,
   },
   emptyContainer: {
     flex: 1,
