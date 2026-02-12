@@ -6,9 +6,10 @@ import { Colors } from '../constants/colors';
 
 interface CourtVisualizationProps {
   court: Court;
+  showPlayerLevel?: boolean;
 }
 
-const CourtVisualization: React.FC<CourtVisualizationProps> = ({ court }) => {
+const CourtVisualization: React.FC<CourtVisualizationProps> = ({ court, showPlayerLevel = true }) => {
   const { players, courtNumber } = court;
   
   return (
@@ -26,7 +27,7 @@ const CourtVisualization: React.FC<CourtVisualizationProps> = ({ court }) => {
               {players.slice(0, 2).map((player, index) => (
                 <View key={player.id} style={styles.playerBox}>
                   <Text style={styles.playerName}>{player.name}</Text>
-                  <Text style={styles.playerGrade}>{player.gradeLevel}</Text>
+                  {showPlayerLevel && <Text style={styles.playerGrade}>{player.gradeLevel}</Text>}
                 </View>
               ))}
             </View>
@@ -41,7 +42,7 @@ const CourtVisualization: React.FC<CourtVisualizationProps> = ({ court }) => {
               {players.slice(2, 4).map((player, index) => (
                 <View key={player.id} style={styles.playerBox}>
                   <Text style={styles.playerName}>{player.name}</Text>
-                  <Text style={styles.playerGrade}>{player.gradeLevel}</Text>
+                  {showPlayerLevel && <Text style={styles.playerGrade}>{player.gradeLevel}</Text>}
                 </View>
               ))}
             </View>

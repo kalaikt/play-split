@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
-import { TextInput, Button, Text, Divider, Menu, IconButton } from 'react-native-paper';
+import { TextInput, Button, Text, Divider, Menu, IconButton, Checkbox } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { Player, Group } from '../types';
 import { Colors } from '../constants/colors';
@@ -24,6 +24,8 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
   const [isEnded, setIsEnded] = useState(shuffleState?.isEnded === true || shuffleState?.isEnded === 1);
   const [menuVisible, setMenuVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPlayerLevel, setShowPlayerLevel] = useState(true);
+  const [rotateByLevel, setRotateByLevel] = useState(true);
 
   // Load initial state on mount
   useEffect(() => {
@@ -70,7 +72,8 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
       courts, 
       rotationOrder,
       rotationIndex,
-      pairHistory
+      pairHistory,
+      rotateByLevel
     );
     
     // Update pair history with new pairs from this round
@@ -152,6 +155,25 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
       </View>
       <ScrollView style={styles.scrollContent}>
         <View style={styles.content}>
+          <View style={styles.settingsRow}>
+            <View style={styles.checkboxItem}>
+              <Checkbox.Android
+                status={showPlayerLevel ? 'checked' : 'unchecked'}
+                onPress={() => setShowPlayerLevel(!showPlayerLevel)}
+                color={Colors.primary}
+              />
+              <Text style={styles.checkboxLabel} onPress={() => setShowPlayerLevel(!showPlayerLevel)}>Show Player Level</Text>
+            </View>
+            <View style={styles.checkboxItem}>
+              <Checkbox.Android
+                status={rotateByLevel ? 'checked' : 'unchecked'}
+                onPress={() => setRotateByLevel(!rotateByLevel)}
+                color={Colors.primary}
+              />
+              <Text style={styles.checkboxLabel} onPress={() => setRotateByLevel(!rotateByLevel)}>Rotate by Level</Text>
+            </View>
+          </View>
+
           <Menu
             visible={menuVisible}
             onDismiss={() => setMenuVisible(false)}
@@ -249,7 +271,7 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
             </Text>
             
             {shuffleResult.courts.map((court: any) => (
-              <CourtVisualization key={court.courtNumber} court={court} />
+              <CourtVisualization key={court.courtNumber} court={court} showPlayerLevel={showPlayerLevel} />
             ))}
 
             {shuffleResult.unassignedPlayers.length > 0 && (
@@ -261,9 +283,11 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
                   {shuffleResult.unassignedPlayers.map((player: Player) => (
                     <View key={player.id} style={styles.waitingPlayer}>
                       <Text style={styles.waitingPlayerName}>{player.name}</Text>
-                      <Text style={styles.waitingPlayerGrade}>
-                        {player.gradeLevel}
-                      </Text>
+                      {showPlayerLevel && (
+                        <Text style={styles.waitingPlayerGrade}>
+                          {player.gradeLevel}
+                        </Text>
+                      )}
                     </View>
                   ))}
                 </View>
@@ -315,6 +339,19 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     backgroundColor: Colors.surface,
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  checkboxItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: Colors.textPrimary,
   },
   scrollContent: {
     flex: 1,

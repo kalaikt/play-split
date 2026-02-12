@@ -5,7 +5,8 @@ export const shufflePlayers = (
   numberOfCourts: number, 
   rotationOrder: Player[] = [],
   currentRotationIndex: number = 0,
-  previousPairs: string[][] = []
+  previousPairs: string[][] = [],
+  rotateByLevel: boolean = true
 ): ShuffleResult & { rotationOrder: Player[], nextRotationIndex: number, newPairs: string[][] } => {
   const totalPlayers = players.length;
   const maxCourts = Math.min(numberOfCourts, Math.floor(totalPlayers / 4));
@@ -14,7 +15,7 @@ export const shufflePlayers = (
   
   // First shuffle: establish rotation order
   if (rotationOrder.length === 0) {
-    const result = performBalancedShuffle(players, maxCourts, players, previousPairs);
+    const result = performBalancedShuffle(players, maxCourts, players, previousPairs, rotateByLevel);
     // Create rotation order from all players (playing + waiting)
     const allPlayersInOrder = [
       ...result.courts.flatMap(c => c.players),
@@ -45,7 +46,7 @@ export const shufflePlayers = (
   const playingPlayers = players.filter(p => !waitingPlayerIds.has(p.id));
   
   if (playingPlayers.length < spotsNeeded) {
-    const result = performBalancedShuffle(players, maxCourts, players, previousPairs);
+    const result = performBalancedShuffle(players, maxCourts, players, previousPairs, rotateByLevel);
     const newPairs = extractPairsFromCourts(result.courts);
     return {
       ...result,
@@ -55,7 +56,7 @@ export const shufflePlayers = (
     };
   }
   
-  const result = performBalancedShuffle(playingPlayers, maxCourts, players, previousPairs);
+  const result = performBalancedShuffle(playingPlayers, maxCourts, players, previousPairs, rotateByLevel);
   const newPairs = extractPairsFromCourts(result.courts);
   
   return {
@@ -113,7 +114,8 @@ const performBalancedShuffle = (
   playersToAssign: Player[], 
   maxCourts: number, 
   allPlayers: Player[],
-  previousPairs: string[][] = []
+  previousPairs: string[][] = [],
+  rotateByLevel: boolean = true
 ): ShuffleResult => {
   // Try multiple random arrangements and pick the one with fewest repeated pairs
   let bestResult: ShuffleResult | null = null;
@@ -121,7 +123,7 @@ const performBalancedShuffle = (
   const attempts = Math.min(20, Math.max(5, previousPairs.length * 2));
   
   for (let attempt = 0; attempt < attempts; attempt++) {
-    const result = buildCourts(playersToAssign, maxCourts, allPlayers);
+    const result = buildCourts(playersToAssign, maxCourts, allPlayers, rotateByLevel);
     
     // Score this arrangement based on pair repetitions
     let totalScore = 0;
@@ -138,14 +140,30 @@ const performBalancedShuffle = (
     if (totalScore === 0) break;
   }
   
-  return bestResult || buildCourts(playersToAssign, maxCourts, allPlayers);
+  return bestResult || buildCourts(playersToAssign, maxCourts, allPlayers, rotateByLevel);
 };
 
 const buildCourts = (
   playersToAssign: Player[], 
   maxCourts: number, 
-  allPlayers: Player[]
+  allPlayers: Player[],
+  rotateByLevel: boolean = true
 ): ShuffleResult => {
+  // If rotateByLevel is off, do a pure random shuffle
+  if (!rotateByLevel) {
+    const shuffled = shuffleArray([...playersToAssign]);
+    const courts: Court[] = [];
+    for (let i = 0; i < maxCourts; i++) {
+      const courtPlayers = shuffled.splice(0, 4);
+      if (courtPlayers.length === 4) {
+        courts.push({ courtNumber: i + 1, players: courtPlayers });
+      }
+    }
+    const assignedPlayerIds = new Set(courts.flatMap(c => c.players.map(p => p.id)));
+    const unassignedPlayers = allPlayers.filter(p => !assignedPlayerIds.has(p.id));
+    return { courts, unassignedPlayers };
+  }
+
   // Separate players by grade level
   const beginners = playersToAssign.filter(p => p.gradeLevel === 'Beginner');
   const intermediates = playersToAssign.filter(p => p.gradeLevel === 'Intermediate');
