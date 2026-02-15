@@ -7,6 +7,7 @@ import { Colors } from '../constants/colors';
 import { shufflePlayers } from '../utils/shuffleAlgorithm';
 import CourtVisualization from '../components/CourtVisualization';
 import { saveShuffleState, deleteShuffleState, getShuffleState } from '../database/db';
+import AdBanner from '@/components/AdBanner';
 
 interface ShuffleScreenProps {
   route: any;
@@ -266,10 +267,13 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
           <Divider style={styles.divider} />
           
           <View style={styles.results}>
+            {/* AdMob Banner above Court Visualization */}
+            <View style={{ alignItems: 'center', marginTop: 0, marginBottom: 10, paddingTop: 0, paddingBottom: 0, height: undefined }}>
+              <AdBanner />
+            </View>
             <Text style={styles.sectionTitle}>
               Courts ({shuffleResult.courts.length})
             </Text>
-            
             {shuffleResult.courts.map((court: any) => (
               <CourtVisualization key={court.courtNumber} court={court} showPlayerLevel={showPlayerLevel} />
             ))}
@@ -391,7 +395,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   divider: {
-    marginVertical: 16,
+    marginVertical: 4,
   },
   results: {
     padding: 16,
