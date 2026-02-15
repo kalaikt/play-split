@@ -8,6 +8,7 @@ import { Group, Player, Expense } from '../types';
 import { useCurrency } from '../context/CurrencyContext';
 import { Colors } from '../constants/colors';
 import AdBanner from '../components/AdBanner';
+import ActivitiesSection from './ActivitiesSection';
 
 interface GroupsScreenProps {
   navigation: any;
@@ -402,67 +403,74 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
             </View>
             {overallSettlements.length > 0 ? (
               <View style={styles.overallSettlementContainer}>
-              <View style={styles.overallSettlementHeader}>
-                <Text style={styles.overallSettlementTitle}>Settlements</Text>
-                <IconButton
-                  icon="export-variant"
-                  size={20}
-                  iconColor={Colors.white}
-                  onPress={shareAllSettlements}
-                  style={[styles.shareAllButton, styles.circleIcon, { backgroundColor: Colors.primary }]}
-                />
-              </View>
-              {overallSettlements.map((transaction, index) => (
-                <View key={index} style={styles.settlementRow}>
-                  <View style={styles.settlementItemWithButton}>
-                    <View style={styles.settlementTextContainer}>
-                      <Text style={styles.settlementText}>
-                        <Text style={styles.settlementFrom}>{transaction.from}</Text>
-                        <Text style={styles.settlementArrow}> → </Text>
-                        <Text style={styles.settlementTo}>{transaction.to}</Text>
-                      </Text>
-                      <Text style={styles.settlementAmount}>
-                        {currency}{transaction.amount.toFixed(2)}
-                      </Text>
-                    </View>
-                    <View style={styles.settlementActions}>
-                      <IconButton
-                        icon="whatsapp"
-                        size={16}
-                        iconColor={Colors.white}
-                        onPress={() => shareViaWhatsApp(transaction.from, transaction.to, transaction.amount)}
-                        style={[styles.shareButton, styles.circleIcon, { backgroundColor: Colors.whatsapp }]}
-                      />
-                      <IconButton
-                        icon="message-text"
-                        size={16}
-                        iconColor={Colors.white}
-                        onPress={() => shareViaSMS(transaction.from, transaction.to, transaction.amount)}
-                        style={[styles.shareButton, styles.circleIcon, { backgroundColor: Colors.primary }]}
-                      />
-                      <IconButton
-                        icon="export-variant"
-                        size={16}
-                        iconColor={Colors.white}
-                        onPress={() => shareGeneric(transaction.from, transaction.to, transaction.amount)}
-                        style={[styles.shareButton, styles.circleIcon, { backgroundColor: Colors.textSecondary }]}
-                      />
-                      <Button
-                        mode="contained"
-                        compact
-                        onPress={() => handleSettleUp(transaction.from, transaction.to, transaction.amount)}
-                        style={styles.settleButton}
-                        buttonColor={Colors.success}
-                        theme={{ roundness: 1 }}
-                      >
-                        Settle Up
-                      </Button>
+                <View style={styles.overallSettlementHeader}>
+                  <Text style={styles.overallSettlementTitle}>Settlements</Text>
+                  <IconButton
+                    icon="export-variant"
+                    size={20}
+                    iconColor={Colors.white}
+                    onPress={shareAllSettlements}
+                    style={[styles.shareAllButton, styles.circleIcon, { backgroundColor: Colors.primary }]}
+                  />
+                </View>
+                {overallSettlements.map((transaction, index) => (
+                  <View key={index} style={styles.settlementRow}>
+                    <View style={styles.settlementItemWithButton}>
+                      <View style={styles.settlementTextContainer}>
+                        <Text style={styles.settlementText}>
+                          <Text style={styles.settlementFrom}>{transaction.from}</Text>
+                          <Text style={styles.settlementArrow}> → </Text>
+                          <Text style={styles.settlementTo}>{transaction.to}</Text>
+                        </Text>
+                        <Text style={styles.settlementAmount}>
+                          {currency}{transaction.amount.toFixed(2)}
+                        </Text>
+                      </View>
+                      <View style={styles.settlementActions}>
+                        <IconButton
+                          icon="whatsapp"
+                          size={16}
+                          iconColor={Colors.white}
+                          onPress={() => shareViaWhatsApp(transaction.from, transaction.to, transaction.amount)}
+                          style={[styles.shareButton, styles.circleIcon, { backgroundColor: Colors.whatsapp }]}
+                        />
+                        <IconButton
+                          icon="message-text"
+                          size={16}
+                          iconColor={Colors.white}
+                          onPress={() => shareViaSMS(transaction.from, transaction.to, transaction.amount)}
+                          style={[styles.shareButton, styles.circleIcon, { backgroundColor: Colors.primary }]}
+                        />
+                        <IconButton
+                          icon="export-variant"
+                          size={16}
+                          iconColor={Colors.white}
+                          onPress={() => shareGeneric(transaction.from, transaction.to, transaction.amount)}
+                          style={[styles.shareButton, styles.circleIcon, { backgroundColor: Colors.textSecondary }]}
+                        />
+                        <Button
+                          mode="contained"
+                          compact
+                          onPress={() => handleSettleUp(transaction.from, transaction.to, transaction.amount)}
+                          style={styles.settleButton}
+                          buttonColor={Colors.success}
+                          theme={{ roundness: 1 }}
+                        >
+                          Settle Up
+                        </Button>
+                      </View>
                     </View>
                   </View>
-                </View>
-              ))}
-            </View>
+                ))}
+              </View>
             ) : null}
+
+            {/* AdMob Banner between Settlements and Activities */}
+            <View style={{ alignItems: 'center', marginVertical: 8 }}>
+              <AdBanner />
+            </View>
+            {/* Activities Section: Settled Up History */}
+            <ActivitiesSection />
           </>
         }
       />
