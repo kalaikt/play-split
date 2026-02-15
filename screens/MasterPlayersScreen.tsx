@@ -95,16 +95,25 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
             />
             <View>
               <Text style={styles.title}>Players</Text>
-              <Text style={styles.subtitle}>Manage all players</Text>
+              <Text style={styles.subtitle}>Manage Players</Text>
             </View>
           </View>
-          <IconButton
-            icon="plus"
-            iconColor={Colors.white}
-            size={28}
-            onPress={() => setDialogVisible(true)}
-            style={styles.addButton}
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <IconButton
+              icon="account"
+              iconColor={Colors.white}
+              size={24}
+              onPress={() => setDialogVisible(true)}
+              style={[styles.addButton, { marginRight: -22, marginLeft: 0, paddingRight: 0 }]}
+            />
+            <IconButton
+              icon="plus"
+              iconColor={Colors.white}
+              size={24}
+              onPress={() => setDialogVisible(true)}
+              style={[styles.addButton, { marginLeft: 0, paddingLeft: 0 }]}
+            />
+          </View>
         </View>
       </View>
       <ScrollView style={styles.content}>
