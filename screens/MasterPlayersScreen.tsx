@@ -5,6 +5,7 @@ import { createMasterPlayer, getAllMasterPlayers, updateMasterPlayer, deleteMast
 import { Player, GradeLevel, Settlement } from '../types';
 import { useCurrency } from '../context/CurrencyContext';
 import { Colors, GradeLevelColors } from '../constants/colors';
+import AdBanner from '@/components/AdBanner';
 
 interface MasterPlayersScreenProps {
   navigation: any;
@@ -156,6 +157,12 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
             <Text>No master players yet. Add your first player!</Text>
           </View>
         )}
+
+        {/* AdMob Banner between Players and Settlement History */}
+        <View style={{ alignItems: 'center', marginVertical: 8 }}>
+          <AdBanner />
+        </View>
+
         {settlements.length > 0 && (
           <View style={styles.settlementHistorySection}>
             <Text style={styles.settlementHistoryTitle}>Settlement History</Text>

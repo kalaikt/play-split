@@ -12,7 +12,13 @@ const ActivitiesSection: React.FC = () => {
   useEffect(() => {
     (async () => {
       const data = await getAllSettlements();
-      setActivities(data.sort((a, b) => new Date(b.settledAt).getTime() - new Date(a.settledAt).getTime()));
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      setActivities(
+        data
+          .filter(a => new Date(a.settledAt) >= oneWeekAgo)
+          .sort((a, b) => new Date(b.settledAt).getTime() - new Date(a.settledAt).getTime())
+      );
     })();
   }, []);
 
