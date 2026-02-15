@@ -264,7 +264,6 @@ const ShuffleScreen: React.FC<ShuffleScreenProps> = ({ route, navigation }) => {
 
       {shuffleResult && (
         <>
-          <Divider style={styles.divider} />
           
           <View style={styles.results}>
             {/* AdMob Banner above Court Visualization */}
