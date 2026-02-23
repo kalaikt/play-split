@@ -163,10 +163,12 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
           <AdBanner />
         </View>
 
-        {settlements.length > 0 && (
-          <View style={styles.settlementHistorySection}>
-            <Text style={styles.settlementHistoryTitle}>Settlement History</Text>
-            {settlements.map((settlement) => (
+        <View style={styles.settlementHistorySection}>
+          <Text style={styles.settlementHistoryTitle}>Settlements</Text>
+          {settlements.length === 0 ? (
+            <Text style={styles.settlementHistoryEmpty}>No settlements yet. Settle up from a group to see history here.</Text>
+          ) : (
+            settlements.map((settlement) => (
               <View key={settlement.id} style={styles.settlementHistoryItem}>
                 <View style={styles.settlementHistoryDetails}>
                   <Text style={styles.settlementHistoryText}>
@@ -180,9 +182,9 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
                   {new Date(settlement.settledAt).toLocaleDateString()} {new Date(settlement.settledAt).toLocaleTimeString()}
                 </Text>
               </View>
-            ))}
-          </View>
-        )}
+            ))
+          )}
+        </View>
       </ScrollView>
 
       <Portal>
@@ -312,6 +314,12 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginBottom: 12,
     marginTop: 12,
+  },
+  settlementHistoryEmpty: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+    paddingVertical: 8,
   },
   settlementHistoryItem: {
     padding: 12,

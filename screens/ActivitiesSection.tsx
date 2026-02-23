@@ -1,33 +1,44 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native';
 import { getAllSettlements } from '../database/db';
 import { Colors } from '../constants/colors';
 import { useCurrency } from '../context/CurrencyContext';
 
-const ActivitiesSection: React.FC = () => {
+interface ActivitiesSectionProps {
+  refreshTrigger?: number;
+}
+
+const ActivitiesSection: React.FC<ActivitiesSectionProps> = ({ refreshTrigger = 0 }) => {
   const [activities, setActivities] = useState<any[]>([]);
   const { currency } = useCurrency();
 
-  useEffect(() => {
-    (async () => {
-      const data = await getAllSettlements();
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      setActivities(
-        data
-          .filter(a => new Date(a.settledAt) >= oneWeekAgo)
-          .sort((a, b) => new Date(b.settledAt).getTime() - new Date(a.settledAt).getTime())
-      );
-    })();
+  const loadActivities = useCallback(async () => {
+    const data = await getAllSettlements();
+    const sorted = (data || []).sort(
+      (a, b) => new Date(b.settledAt).getTime() - new Date(a.settledAt).getTime()
+    );
+    setActivities(sorted);
   }, []);
 
-  if (!activities.length) return null;
+  useFocusEffect(
+    useCallback(() => {
+      loadActivities();
+    }, [loadActivities])
+  );
+
+  useEffect(() => {
+    loadActivities();
+  }, [refreshTrigger, loadActivities]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Activities</Text>
-      {activities.map((activity, idx) => (
+      {activities.length === 0 ? (
+        <Text style={styles.emptyText}>No activities yet. Settle up from the list above to see history here.</Text>
+      ) : (
+      activities.map((activity, idx) => (
         <View key={activity.id || idx} style={styles.row}>
           <Text style={styles.text}>
             <Text style={styles.from}>{activity.fromPlayer}</Text>
@@ -37,7 +48,8 @@ const ActivitiesSection: React.FC = () => {
           </Text>
           <Text style={styles.date}>{new Date(activity.settledAt).toLocaleString()}</Text>
         </View>
-      ))}
+      ))
+      )}
     </View>
   );
 };
@@ -81,6 +93,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textSecondary,
     marginLeft: 4,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
   },
 });
 

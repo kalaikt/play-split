@@ -52,7 +52,11 @@ const AdBanner: React.FC = () => {
 
     return (
       <BannerAd
-        unitId={Constants.expoConfig?.extra?.adUnitId || TestIds.BANNER}
+        unitId={
+          Platform.OS === 'android'
+            ? (Constants.expoConfig?.extra?.adUnitIdAndroid ?? Constants.expoConfig?.extra?.adUnitId ?? TestIds.BANNER)
+            : (Constants.expoConfig?.extra?.adUnitId ?? TestIds.BANNER)
+        }
         size={BannerAdSize.BANNER}
         requestOptions={{
           requestNonPersonalizedAdsOnly: true,

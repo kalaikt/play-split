@@ -1,9 +1,0 @@
-{
-  "expo": {
-    // ...existing config...
-    "icon": "assets/logo.png",
-    "web": {
-      "favicon": "assets/logo.png"
-    }
-  }
-}

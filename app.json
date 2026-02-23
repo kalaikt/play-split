@@ -11,21 +11,22 @@
       "resizeMode": "contain",
       "backgroundColor": "#00897B"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.playerdraws.app",
-      "googleMobileAdsAppId": "ca-app-pub-3699502919919350~8149306888"
+      "bundleIdentifier": "com.kalai.k.t.playerdraws",
+      "googleMobileAdsAppId": "ca-app-pub-3699502919919350~8961740739",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "assets/logo.png",
         "backgroundColor": "#00897B"
       },
-      "package": "com.playsplit.app",
-      "googleMobileAdsAppId": "ca-app-pub-3699502919919350~8149306888"
+      "package": "com.kalai.k.t.playerdraws",
+      "googleMobileAdsAppId": "ca-app-pub-3699502919919350~7129784316"
     },
     "web": {
       "favicon": "assets/logo.png"
@@ -36,13 +37,17 @@
       [
         "react-native-google-mobile-ads",
         {
-          "androidAppId": "ca-app-pub-3699502919919350~8149306888",
-          "iosAppId": "ca-app-pub-3699502919919350~8149306888"
+          "androidAppId": "ca-app-pub-3699502919919350~7129784316",
+          "iosAppId": "ca-app-pub-3699502919919350~8961740739"
         }
       ]
     ],
     "extra": {
-      "adUnitId": "ca-app-pub-3699502919919350/1482680314"
+      "eas": {
+        "projectId": "52507606-913c-4b44-9cb5-9d75edcf65b4"
+      },
+      "adUnitId": "ca-app-pub-3699502919919350/6457673389",
+      "adUnitIdAndroid": "ca-app-pub-3699502919919350/5635546306"
     }
   }
 }

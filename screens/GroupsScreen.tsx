@@ -29,6 +29,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
   const [masterPlayers, setMasterPlayers] = useState<Player[]>([]);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
   const [overallSettlements, setOverallSettlements] = useState<Array<{from: string, to: string, amount: number}>>([]);
+  const [activitiesRefreshTrigger, setActivitiesRefreshTrigger] = useState(0);
   const { currency, setCurrency } = useCurrency();
   const [currencyMenuVisible, setCurrencyMenuVisible] = useState(false);
 
@@ -164,6 +165,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
   const handleSettleUp = async (from: string, to: string, amount: number) => {
     await recordSettlement(from, to, amount);
     await loadGroups(); // Reload to recalculate settlements
+    setActivitiesRefreshTrigger((k) => k + 1); // Refresh Activities section
   };
 
   const shareViaWhatsApp = (from: string, to: string, amount: number) => {
@@ -470,7 +472,7 @@ const GroupsScreen: React.FC<GroupsScreenProps> = ({ navigation }) => {
               <AdBanner />
             </View>
             {/* Activities Section: Settled Up History */}
-            <ActivitiesSection />
+            <ActivitiesSection refreshTrigger={activitiesRefreshTrigger} />
           </>
         }
       />
