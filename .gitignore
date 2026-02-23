@@ -83,3 +83,26 @@ yarn-error.log
 .expo/
 web-build/
 dist/
+
+# IDE / Editor
+.vscode/
+*.swp
+*~
+
+# Local environment files (secrets)
+.env
+.env.*
+.env.*.local
+
+# Logs and reports
+*.log
+logs/
+coverage/
+
+# Ruby / Bundler
+.bundle/
+vendor/bundle
+
+# Cache
+.cache/
+
