@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "PlaySplit",
-    "slug": "playsplit",
-    "version": "1.0.0",
+    "slug": "player-draws",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "assets/logo.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kalai.k.t.playerdraws",
+      "bundleIdentifier": "com.kalai.k.t.playsplit",
       "googleMobileAdsAppId": "ca-app-pub-3699502919919350~8961740739",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -25,7 +25,7 @@
         "foregroundImage": "assets/logo.png",
         "backgroundColor": "#00897B"
       },
-      "package": "com.kalai.k.t.playerdraws",
+      "package": "com.kalai.k.t.playsplit",
       "googleMobileAdsAppId": "ca-app-pub-3699502919919350~7129784316"
     },
     "web": {

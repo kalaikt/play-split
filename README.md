@@ -1,4 +1,4 @@
-# Player Draws - Badminton Court Shuffling App
+# PlaySplit - Badminton Court Shuffling App
 
 A React Native mobile application for managing badminton players and intelligently shuffling them across courts based on their skill levels.
 
@@ -50,7 +50,7 @@ npm run web      # for web (limited functionality)
 ## Project Structure
 
 ```
-player-draws/
+playsplit/
 ├── App.tsx                 # Main app component with navigation
 ├── types.ts               # TypeScript type definitions
 ├── database/

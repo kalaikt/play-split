@@ -5,7 +5,7 @@ let db: SQLite.SQLiteDatabase | null = null;
 
 export const initDatabase = async () => {
   if (!db) {
-    db = await SQLite.openDatabaseAsync('playerdraws.db');
+    db = await SQLite.openDatabaseAsync('playsplit.db');
   }
   
   await db.execAsync(`
