@@ -257,14 +257,17 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
                 <View style={styles.expenseActions}>
                   <IconButton
                     icon="pencil"
-                    size={20}
+                    size={18}
                     onPress={() => openEditExpenseDialog(expense)}
+                    style={styles.circleIconButton}
+                    iconColor={Colors.textPrimary}
                   />
                   <IconButton
                     icon="delete"
-                    size={20}
+                    size={18}
                     iconColor={Colors.error}
                     onPress={() => handleDeleteExpense(expense.id)}
+                    style={[styles.circleIconButton, { marginLeft: 8 }]}
                   />
                 </View>
               </View>
@@ -312,18 +315,21 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
                     </View>
                     <View style={styles.expenseActions}>
                       <IconButton
-                        icon="pencil"
-                        size={20}
-                        onPress={() => {
-                          setExpenseListVisible(false);
-                          openEditExpenseDialog(expense);
-                        }}
+                          icon="pencil"
+                          size={18}
+                          onPress={() => {
+                            setExpenseListVisible(false);
+                            openEditExpenseDialog(expense);
+                          }}
+                          style={styles.circleIconButton}
+                          iconColor={Colors.textPrimary}
                       />
                       <IconButton
-                        icon="delete"
-                        size={20}
-                        iconColor={Colors.error}
-                        onPress={() => handleDeleteExpense(expense.id)}
+                          icon="delete"
+                          size={18}
+                          iconColor={Colors.error}
+                          onPress={() => handleDeleteExpense(expense.id)}
+                          style={[styles.circleIconButton, { marginLeft: 8 }]}
                       />
                     </View>
                   </View>
@@ -577,6 +583,16 @@ const styles = StyleSheet.create({
   errorButton: {
     borderColor: Colors.error,
     borderWidth: 2,
+  },
+  circleIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   label: {
     fontSize: 12,
