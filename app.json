@@ -15,7 +15,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kalai.k.t.playsplit",
-      "googleMobileAdsAppId": "ca-app-pub-3699502919919350~8961740739",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -25,8 +24,7 @@
         "foregroundImage": "assets/logo.png",
         "backgroundColor": "#00897B"
       },
-      "package": "com.kalai.k.t.playsplit",
-      "googleMobileAdsAppId": "ca-app-pub-3699502919919350~7129784316"
+      "package": "com.kalai.k.t.playsplit"
     },
     "web": {
       "favicon": "assets/logo.png"
