@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlaySplit",
     "slug": "player-draws",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "assets/logo.png",
     "userInterfaceStyle": "light",
@@ -24,7 +24,8 @@
         "foregroundImage": "assets/logo.png",
         "backgroundColor": "#00897B"
       },
-      "package": "com.kalai.k.t.playsplit"
+      "package": "com.kalai.k.t.playsplit",
+      "proguardRules": "./proguard-rules.pro"
     },
     "web": {
       "favicon": "assets/logo.png"
