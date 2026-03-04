@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, FlatList, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TextInput as RNTextInput } from 'react-native';
 import { Button, List, Text, Checkbox, IconButton, Dialog, Portal, TextInput, Menu } from 'react-native-paper';
 import { getAllMasterPlayers, addPlayerToGroup, removePlayerFromGroup, getSelectedPlayersForGroup, createExpense, getExpensesByGroup, updateExpense, deleteExpense } from '../database/db';
 import { Player, Group, GradeLevel, Expense } from '../types';
 import { useCurrency } from '../context/CurrencyContext';
 import { Colors, GradeLevelColors } from '../constants/colors';
+import AdBanner from '../components/AdBanner';
 
 interface SelectPlayersScreenProps {
   route: any;
@@ -27,6 +28,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
   const [amountError, setAmountError] = useState(false);
   const [paidByError, setPaidByError] = useState(false);
   const { currency } = useCurrency();
+  const amountInputRef = useRef<RNTextInput>(null);
 
   useEffect(() => {
     loadPlayers();
@@ -226,6 +228,13 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
           ))
         )}
 
+        {/* Ad between players and expenses */}
+        {allPlayers.length > 0 && (
+          <View style={{ alignItems: 'center', marginVertical: 8 }}>
+            <AdBanner />
+          </View>
+        )}
+
         {/* Expenses Section */}
         {expenses.length > 0 && (
           <View style={styles.expensesSection}>
@@ -290,6 +299,11 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
           </View>
         )}
 
+        {/* Ad at the bottom */}
+        <View style={{ alignItems: 'center', marginVertical: 8 }}>
+          <AdBanner />
+        </View>
+
       </ScrollView>
 
       <Portal>
@@ -345,7 +359,12 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
       </Portal>
 
       <Portal>
-        <Dialog visible={expenseDialogVisible} onDismiss={() => setExpenseDialogVisible(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardAvoidingView}
+          pointerEvents="box-none"
+        >
+        <Dialog visible={expenseDialogVisible} onDismiss={() => setExpenseDialogVisible(false)} style={styles.topDialog}>
           <Dialog.Title>{editingExpense ? 'Edit Expense' : 'Add Expense'}</Dialog.Title>
           <Dialog.Content>
             <TextInput
@@ -358,9 +377,13 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
               mode="outlined"
               style={styles.input}
               error={titleError}
+              returnKeyType="next"
+              onSubmitEditing={() => amountInputRef.current?.focus()}
+              autoFocus
             />
             {titleError && <Text style={styles.errorText}>Title is required</Text>}
             <TextInput
+              ref={amountInputRef}
               label="Amount"
               value={expenseAmount}
               onChangeText={(text) => {
@@ -372,6 +395,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
               left={<TextInput.Affix text={currency} />}
               style={styles.input}
               error={amountError}
+              returnKeyType="done"
             />
             {amountError && <Text style={styles.errorText}>Valid amount is required</Text>}
             <Text style={styles.label}>Paid By</Text>
@@ -412,6 +436,7 @@ const SelectPlayersScreen: React.FC<SelectPlayersScreenProps> = ({ route, naviga
             <Button onPress={handleSaveExpense} buttonColor={Colors.primary} textColor={Colors.white} theme={{ roundness: 1 }}>Save</Button>
           </Dialog.Actions>
         </Dialog>
+        </KeyboardAvoidingView>
       </Portal>
     </View>
   );
@@ -570,6 +595,15 @@ const styles = StyleSheet.create({
   },
   expenseActions: {
     flexDirection: 'row',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingTop: 80,
+  },
+  topDialog: {
+    marginTop: 0,
+    marginBottom: 'auto' as any,
   },
   input: {
     marginTop: 8,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, ScrollView } from 'react-native';
+import { View, FlatList, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Button, List, Dialog, Portal, TextInput, Text, Menu, IconButton } from 'react-native-paper';
 import { createMasterPlayer, getAllMasterPlayers, updateMasterPlayer, deleteMasterPlayer, getAllSettlements } from '../database/db';
 import { Player, GradeLevel, Settlement } from '../types';
@@ -188,7 +188,12 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
       </ScrollView>
 
       <Portal>
-        <Dialog visible={dialogVisible} onDismiss={resetForm}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardAvoidingView}
+          pointerEvents="box-none"
+        >
+        <Dialog visible={dialogVisible} onDismiss={resetForm} style={styles.topDialog}>
           <Dialog.Title>{editMode ? 'Edit Player' : 'Add Player'}</Dialog.Title>
           <Dialog.Content>
             <TextInput
@@ -197,6 +202,9 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
               onChangeText={setPlayerName}
               mode="outlined"
               style={styles.input}
+              returnKeyType="done"
+              onSubmitEditing={handleSavePlayer}
+              autoFocus
             />
             
             <Menu
@@ -223,6 +231,7 @@ const MasterPlayersScreen: React.FC<MasterPlayersScreenProps> = ({ navigation })
             <Button onPress={handleSavePlayer} buttonColor={Colors.primary} textColor={Colors.white} theme={{ roundness: 1 }}>Save</Button>
           </Dialog.Actions>
         </Dialog>
+        </KeyboardAvoidingView>
       </Portal>
     </View>
   );
@@ -297,6 +306,15 @@ const styles = StyleSheet.create({
   addButton: {
     margin: 0,
     backgroundColor: 'transparent',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingTop: 80,
+  },
+  topDialog: {
+    marginTop: 0,
+    marginBottom: 'auto' as any,
   },
   input: {
     marginBottom: 12,
